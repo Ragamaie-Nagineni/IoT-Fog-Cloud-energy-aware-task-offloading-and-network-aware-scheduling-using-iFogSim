@@ -143,12 +143,12 @@ public class IndustrialIoTFog {
 
 	    Sensor tempSensor = new Sensor(
 	        "temp-" + id, "TEMP", userId, appId,
-	        new DeterministicDistribution(5)
+	        new DeterministicDistribution(3)
 	    );
 
 	    Sensor vibSensor = new Sensor(
 	        "vib-" + id, "VIB", userId, appId,
-	        new DeterministicDistribution(7)
+	        new DeterministicDistribution(10)
 	    );
 
 	    tempSensor.setGatewayDeviceId(node.getId());
