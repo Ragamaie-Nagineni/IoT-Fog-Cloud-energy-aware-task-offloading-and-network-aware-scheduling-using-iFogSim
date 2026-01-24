@@ -224,16 +224,16 @@ public class IndustrialIoTFog {
 		
 		Application application = Application.createApplication(appId, userId);
 		
-		application.addAppModule("data_preprocessor", 10);
-		application.addAppModule("analytics", 10);
+		application.addAppModule("data_preprocessor", 50);
+		application.addAppModule("analytics", 200);
 		application.addAppModule("cloud_storage", 10);
 
 		
 		application.addAppEdge("TEMP", "data_preprocessor",
-		        1000, 2000, "TEMP_DATA", Tuple.UP, AppEdge.SENSOR);
+		        500, 500, "TEMP_DATA", Tuple.UP, AppEdge.SENSOR);
 
 		application.addAppEdge("VIB", "data_preprocessor",
-		        1000, 2000, "VIB_DATA", Tuple.UP, AppEdge.SENSOR);
+		        3000, 3000, "VIB_DATA", Tuple.UP, AppEdge.SENSOR);
 
 		application.addAppEdge("data_preprocessor", "analytics",
 		        2000, 4000, "PROCESSED_DATA", Tuple.UP, AppEdge.MODULE);

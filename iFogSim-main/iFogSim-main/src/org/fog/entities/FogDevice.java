@@ -673,7 +673,18 @@ public class FogDevice extends PowerDatacenter {
 
     protected void processTupleArrival(SimEvent ev) {
         Tuple tuple = (Tuple) ev.getData();
+        /// (Converting IoT data into computational tasks) as a verification sub-step.
+        Log.printLine(
+        	    CloudSim.clock()
+        	    + " | Device: " + getName()
+        	    + " | TupleType: " + tuple.getTupleType()
+        	    + " | CPU: " + tuple.getCloudletLength()
+        	    + " | DataSize: " + tuple.getCloudletFileSize()
+        	    + " | SrcModule: " + tuple.getSrcModuleName()
+        	    + " | DestModule: " + tuple.getDestModuleName()
+        	);
 
+        /// 
         if (getName().equals("cloud")) {
             updateCloudTraffic();
         }
