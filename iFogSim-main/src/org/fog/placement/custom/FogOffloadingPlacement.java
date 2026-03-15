@@ -43,13 +43,31 @@ public class FogOffloadingPlacement extends ModulePlacementEdgewards {
             boolean placed = false;
 
             // Try fog first
-            for (FogDevice device : devices) {
+            //commented by ragamaie
+            
+            /*for (FogDevice device : devices) {
                 if (device.getLevel() > 0 && moduleName.contains("detector")) {
                 	System.out.println(
                 		    "[OFFLOADING] Placing module " + moduleName +
                 		    " on device " + device.getName() +
                 		    " (level=" + device.getLevel() + ")"
                 		);
+
+                    mapping.addModuleToDevice(moduleName, device.getName());
+                    placed = true;
+                    break;
+                }
+            }*/
+            //added for checking
+            for (FogDevice device : devices) {
+
+                // Place preprocessing in fog nodes
+                if (device.getLevel() > 0 && moduleName.equals("data_preprocessor")) {
+
+                    System.out.println(
+                        "[OFFLOADING] Placing module " + moduleName +
+                        " on device " + device.getName()
+                    );
 
                     mapping.addModuleToDevice(moduleName, device.getName());
                     placed = true;
