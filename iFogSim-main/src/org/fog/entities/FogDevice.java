@@ -479,9 +479,7 @@ public class FogDevice extends PowerDatacenter {
         checkCloudletCompletion();
 
         /** Remove completed VMs **/
-        /**
-         * Change made by HARSHIT GUPTA
-         */
+        
 		/*for (PowerHost host : this.<PowerHost> getHostList()) {
 			for (Vm vm : host.getCompletedVms()) {
 				getVmAllocationPolicy().deallocateHostForVm(vm);
@@ -644,7 +642,7 @@ public class FogDevice extends PowerDatacenter {
     }
 
     protected void sendTupleToActuator(Tuple tuple) {
-		/*for(Pair<Integer, Double> actuatorAssociation : getAssociatedActuatorIds()){
+		for(Pair<Integer, Double> actuatorAssociation : getAssociatedActuatorIds()){
 			int actuatorId = actuatorAssociation.getFirst();
 			double delay = actuatorAssociation.getSecond();
 			if(actuatorId == tuple.getActuatorId()){
@@ -654,7 +652,7 @@ public class FogDevice extends PowerDatacenter {
 		}
 		int childId = getChildIdForTuple(tuple);
 		if(childId != -1)
-			sendDown(tuple, childId);*/
+			sendDown(tuple, childId);
         for (Pair<Integer, Double> actuatorAssociation : getAssociatedActuatorIds()) {
             int actuatorId = actuatorAssociation.getFirst();
             double delay = actuatorAssociation.getSecond();
@@ -683,6 +681,15 @@ public class FogDevice extends PowerDatacenter {
         	    + " | SrcModule: " + tuple.getSrcModuleName()
         	    + " | DestModule: " + tuple.getDestModuleName()
         	);
+        //added by ragamaie for checking tasks for fog controlller to analyze
+        System.out.println(
+                "TASK ARRIVED -> " +
+                tuple.getTupleType() +
+                " | CPU:" + tuple.getCloudletLength() +
+                " | SIZE:" + tuple.getCloudletFileSize() +
+                " | DEVICE:" + getName() +
+                " | TIME:" + CloudSim.clock()
+            );
 
         /// 
         if (getName().equals("cloud")) {
