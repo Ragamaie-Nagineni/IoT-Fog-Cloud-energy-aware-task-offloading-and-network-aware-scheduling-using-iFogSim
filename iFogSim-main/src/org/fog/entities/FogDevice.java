@@ -23,6 +23,10 @@ import java.util.*;
 
 public class FogDevice extends PowerDatacenter {
     protected Queue<Tuple> northTupleQueue;
+    //edited by  ragamaie for adding tuple
+ // Scheduling queue for tasks arriving at this device
+    protected List<Tuple> schedulingQueue = new ArrayList<>();
+    //
     protected Queue<Pair<Tuple, Integer>> southTupleQueue;
 
     protected List<String> activeApplications;
@@ -751,8 +755,33 @@ public class FogDevice extends PowerDatacenter {
                 //Logger.error(getName(), "Executing tuple for operator " + moduleName);
 
                 updateTimingsOnReceipt(tuple);
+                // edited by ragamaie for Short cpu time first
+                //executeTuple(ev, tuple.getDestModuleName()); commented this for adding more
+                
+                
+             // Add tuple to scheduling queue
+                schedulingQueue.add(tuple);
 
-                executeTuple(ev, tuple.getDestModuleName());
+                // Sort tasks by CPU length (Shortest Job First scheduling)
+                Collections.sort(schedulingQueue, new Comparator<Tuple>() {
+                    @Override
+                    public int compare(Tuple t1, Tuple t2) {
+                        return Long.compare(t1.getCloudletLength(), t2.getCloudletLength());
+                    }
+                });
+
+                // Execute the highest priority task
+                Tuple nextTask = schedulingQueue.remove(0);
+             // DEBUG: show scheduler decision
+                System.out.println(
+                    "[SCHEDULER] Executing task " + nextTask.getTupleType() +
+                    " | CPU:" + nextTask.getCloudletLength() +
+                    " | DEVICE:" + getName()
+                );
+                executeTuple(ev, nextTask.getDestModuleName());
+                //
+                
+                
             } else if (tuple.getDestModuleName() != null) {
                 if (tuple.getDirection() == Tuple.UP)
                     sendUp(tuple);
@@ -805,8 +834,14 @@ public class FogDevice extends PowerDatacenter {
 
     protected void executeTuple(SimEvent ev, String moduleName) {
         Logger.debug(getName(), "Executing tuple on module " + moduleName);
-        Tuple tuple = (Tuple) ev.getData();
 
+        // edited by ragamaie for printing task on console
+        Tuple tuple = (Tuple) ev.getData();
+        System.out.println(
+            "[EXECUTION] Device " + getName() +
+            " running " + tuple.getTupleType() +
+            " CPU:" + tuple.getCloudletLength()
+        );
         AppModule module = getModuleByName(moduleName);
 
         if (tuple.getDirection() == Tuple.UP) {
