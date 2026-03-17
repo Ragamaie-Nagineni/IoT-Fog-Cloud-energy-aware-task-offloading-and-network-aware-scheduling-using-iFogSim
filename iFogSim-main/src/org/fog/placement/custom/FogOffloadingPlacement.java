@@ -23,7 +23,7 @@ public class FogOffloadingPlacement extends ModulePlacementEdgewards {
     }
 
     @Override
-    protected void mapModules() {
+    public void mapModules() {
 
         Application app = getApplication();
         List<FogDevice> devices = getFogDevices();
@@ -62,7 +62,7 @@ public class FogOffloadingPlacement extends ModulePlacementEdgewards {
             for (FogDevice device : devices) {
 
                 // Place preprocessing in fog nodes
-                if (device.getLevel() > 0 && moduleName.equals("data_preprocessor")) {
+                if (device.getLevel() == 3 && moduleName.equals("data_preprocessor")) {
 
                     System.out.println(
                         "[OFFLOADING] Placing module " + moduleName +
@@ -71,7 +71,8 @@ public class FogOffloadingPlacement extends ModulePlacementEdgewards {
 
                     mapping.addModuleToDevice(moduleName, device.getName());
                     placed = true;
-                    break;
+                    //commented by ragamaie to fix 
+                    //break;
                 }
             }
 
@@ -86,10 +87,13 @@ public class FogOffloadingPlacement extends ModulePlacementEdgewards {
                     		);
 
                         mapping.addModuleToDevice(moduleName, device.getName());
-                        break;
+                        //commented by ragamaie to fix
+                        //break;
                     }
                 }
             }
         }
+        super.mapModules();
     }
+    
 }

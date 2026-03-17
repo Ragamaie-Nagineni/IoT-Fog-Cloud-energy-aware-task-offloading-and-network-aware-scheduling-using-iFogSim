@@ -52,7 +52,7 @@ public class IndustrialIoTFog {
 		Log.printLine("Starting Industrial IoT Simulation...");
 
 		try {
-			Log.disable();
+			//Log.disable();
 			int num_user = 1; // number of cloud users
 			Calendar calendar = Calendar.getInstance();
 			boolean trace_flag = false; // mean trace events
@@ -82,9 +82,16 @@ public class IndustrialIoTFog {
 			/*controller.submitApplication(application, 
 					(CLOUD)?(new ModulePlacementMapping(fogDevices, application, moduleMapping))
 							:(new ModulePlacementEdgewards(fogDevices, sensors, actuators, application, moduleMapping)));*/
-			controller.submitApplication(application,
+			/*controller.submitApplication(application,
 				    new FogOffloadingPlacement(fogDevices, sensors, actuators, application, moduleMapping)
-				);
+				);*/
+			FogOffloadingPlacement placement =
+				    new FogOffloadingPlacement(fogDevices, sensors, actuators, application, moduleMapping);
+
+				
+				placement.mapModules();
+
+				controller.submitApplication(application, placement);
 
 			
 			TimeKeeper.getInstance().setSimulationStartTime(Calendar.getInstance().getTimeInMillis());
