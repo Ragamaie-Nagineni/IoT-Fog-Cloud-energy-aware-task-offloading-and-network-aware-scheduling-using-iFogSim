@@ -87,13 +87,17 @@ public class FogOffloadingPlacement extends ModulePlacementEdgewards {
                     		);
 
                         mapping.addModuleToDevice(moduleName, device.getName());
-                        //commented by ragamaie to fix
-                        //break;
+                        
+                        break;
                     }
                 }
             }
         }
-        super.mapModules();
+        //super.mapModules();
+        System.out.println("=== FINAL MODULE PLACEMENT ===");
+        for (String module : moduleMapping.getModuleMapping().keySet()) {
+            System.out.println(module + " -> " + moduleMapping.getModuleMapping().get(module));
+        }
     }
     
 }

@@ -675,11 +675,12 @@ public class FogDevice extends PowerDatacenter {
 
     protected void processTupleArrival(SimEvent ev) {
     	//adding a print statement to debug by ragamaie
+    	 Tuple tuple = (Tuple) ev.getData();
     	System.out.println(
     		    "[ARRIVAL CHECK] Device=" + getName() +
     		    " received tuple=" + tuple.getTupleType()
     		);
-        Tuple tuple = (Tuple) ev.getData();
+       
         /// (Converting IoT data into computational tasks) as a verification sub-step.
         Log.printLine(
         	    CloudSim.clock()

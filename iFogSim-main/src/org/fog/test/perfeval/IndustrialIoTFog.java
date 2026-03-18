@@ -71,10 +71,11 @@ public class IndustrialIoTFog {
 			Controller controller = null;
 			
 			ModuleMapping moduleMapping = ModuleMapping.createModuleMapping();
-
-			moduleMapping.addModuleToDevice("data_preprocessor", "sensor-node-0-0");
+           
+			 //commented by ragamaie to prevent conflicts with custom placements
+			/*moduleMapping.addModuleToDevice("data_preprocessor", "sensor-node-0-0");
 			moduleMapping.addModuleToDevice("analytics", "cloud");
-			moduleMapping.addModuleToDevice("cloud_storage", "cloud");
+			moduleMapping.addModuleToDevice("cloud_storage", "cloud");*/
 
 			controller = new Controller("master-controller", fogDevices, sensors, 
 					actuators);
@@ -88,8 +89,8 @@ public class IndustrialIoTFog {
 			FogOffloadingPlacement placement =
 				    new FogOffloadingPlacement(fogDevices, sensors, actuators, application, moduleMapping);
 
-				
-				placement.mapModules();
+				//commented by ragamaie
+				//placement.mapModules();
 
 				controller.submitApplication(application, placement);
 
