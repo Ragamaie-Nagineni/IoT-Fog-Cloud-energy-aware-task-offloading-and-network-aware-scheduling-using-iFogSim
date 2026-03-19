@@ -33,9 +33,46 @@ public class FogOffloadingPlacement extends ModulePlacementEdgewards {
 
     @Override
     public void mapModules() {
+
         DebugLogger.log("=== mapModules() STARTED ===");
-        // Simple implementation for now
-        DebugLogger.log("Number of fog devices: " + getFogDevices().size());
+
+        Application app = getApplication();
+        List<FogDevice> devices = getFogDevices();
+        ModuleMapping mapping = this.moduleMapping;
+
+        for (AppModule module : app.getModules()) {
+
+            String moduleName = module.getName();
+
+            boolean placed = false;
+
+            // Place data_preprocessor on sensor nodes (level 3)
+            for (FogDevice device : devices) {
+                if (device.getLevel() == 3 && moduleName.equals("data_preprocessor")) {
+
+                    DebugLogger.log("[PLACEMENT] " + moduleName + " -> " + device.getName());
+
+                    mapping.addModuleToDevice(moduleName, device.getName());
+                    placed = true;
+                }
+            }
+
+            // Place others in cloud
+            if (!placed) {
+                for (FogDevice device : devices) {
+                    if (device.getLevel() == 0) {
+
+                        DebugLogger.log("[PLACEMENT] " + moduleName + " -> CLOUD");
+
+                        mapping.addModuleToDevice(moduleName, device.getName());
+                    }
+                }
+            }
+        }
+
+        // VERY IMPORTANT
+        super.mapModules();
+
         DebugLogger.log("=== mapModules() COMPLETED ===");
     }
 }
