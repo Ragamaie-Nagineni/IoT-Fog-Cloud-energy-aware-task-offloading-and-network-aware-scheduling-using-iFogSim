@@ -77,23 +77,18 @@ public class IndustrialIoTFog {
 			moduleMapping.addModuleToDevice("analytics", "cloud");
 			moduleMapping.addModuleToDevice("cloud_storage", "cloud");*/
 
-			controller = new Controller("master-controller", fogDevices, sensors, 
-					actuators);
-			
-			/*controller.submitApplication(application, 
-					(CLOUD)?(new ModulePlacementMapping(fogDevices, application, moduleMapping))
-							:(new ModulePlacementEdgewards(fogDevices, sensors, actuators, application, moduleMapping)));*/
-			/*controller.submitApplication(application,
-				    new FogOffloadingPlacement(fogDevices, sensors, actuators, application, moduleMapping)
-				);*/
+			// Create the placement first
+			// Create placement - it will automatically call mapModules() in constructor
+			// Create placement
+			// Create placement
 			FogOffloadingPlacement placement =
-				    new FogOffloadingPlacement(fogDevices, sensors, actuators, application, moduleMapping);
+			        new FogOffloadingPlacement(fogDevices, sensors, actuators, application, moduleMapping);
 
-				//commented by ragamaie
-				//placement.mapModules();
+			// Create controller
+			controller = new Controller("master-controller", fogDevices, sensors, actuators);
 
-				controller.submitApplication(application, placement);
-
+			// Submit application
+			controller.submitApplication(application, placement);
 			
 			TimeKeeper.getInstance().setSimulationStartTime(Calendar.getInstance().getTimeInMillis());
 			
@@ -102,6 +97,9 @@ public class IndustrialIoTFog {
 			CloudSim.stopSimulation();
 
 			Log.printLine("VRGame finished!");
+			 org.fog.utils.DebugLogger.close(); // ← ADD THIS LINE
+		        
+		        Log.printLine("VRGame finished!");
 		} catch (Exception e) {
 			e.printStackTrace();
 			Log.printLine("Unwanted errors happen");

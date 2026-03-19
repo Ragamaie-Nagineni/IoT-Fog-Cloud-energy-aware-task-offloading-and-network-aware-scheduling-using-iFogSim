@@ -751,7 +751,7 @@ public class FogDevice extends PowerDatacenter {
             sendNow(getControllerId(), FogEvents.TUPLE_FINISHED, null);
         }
 
-        if (appToModulesMap.containsKey(tuple.getAppId())) {
+        /*if (appToModulesMap.containsKey(tuple.getAppId())) {
             if (appToModulesMap.get(tuple.getAppId()).contains(tuple.getDestModuleName())) {
                 int vmId = -1;
                 for (Vm vm : getHost().getVmList()) {
@@ -811,7 +811,55 @@ public class FogDevice extends PowerDatacenter {
                 for (int childId : getChildrenIds())
                     sendDown(tuple, childId);
             }
-        }
+        }*/
+        if (appToModulesMap.containsKey(tuple.getAppId()) && 
+        	    appToModulesMap.get(tuple.getAppId()).contains(tuple.getDestModuleName())) {
+        	    
+        	    int vmId = -1;
+        	    for (Vm vm : getHost().getVmList()) {
+        	        if (((AppModule) vm).getName().equals(tuple.getDestModuleName()))
+        	            vmId = vm.getId();
+        	    }
+        	    
+        	    if (vmId >= 0) {
+        	        tuple.setVmId(vmId);
+        	        updateTimingsOnReceipt(tuple);
+        	        
+        	        // DEBUG: show execution
+        	        System.out.println(
+        	            "[EXECUTING] Device " + getName() +
+        	            " running " + tuple.getTupleType() +
+        	            " on module " + tuple.getDestModuleName() +
+        	            " CPU:" + tuple.getCloudletLength()
+        	        );
+        	        
+        	        executeTuple(ev, tuple.getDestModuleName());  // Execute directly
+        	    } else {
+        	        // Module not found on this device, forward
+        	        if (tuple.getDirection() == Tuple.UP)
+        	            sendUp(tuple);
+        	        else if (tuple.getDirection() == Tuple.DOWN) {
+        	            for (int childId : getChildrenIds())
+        	                sendDown(tuple, childId);
+        	        }
+        	    }
+        	} else if (tuple.getDestModuleName() != null) {
+        	    // Module not on this device, forward appropriately
+        	    if (tuple.getDirection() == Tuple.UP)
+        	        sendUp(tuple);
+        	    else if (tuple.getDirection() == Tuple.DOWN) {
+        	        for (int childId : getChildrenIds())
+        	            sendDown(tuple, childId);
+        	    }
+        	} else {
+        	    // No destination module specified
+        	    if (tuple.getDirection() == Tuple.UP)
+        	        sendUp(tuple);
+        	    else if (tuple.getDirection() == Tuple.DOWN) {
+        	        for (int childId : getChildrenIds())
+        	            sendDown(tuple, childId);
+        	    }
+        	}
     }
 
     protected void updateTimingsOnReceipt(Tuple tuple) {
@@ -882,6 +930,8 @@ public class FogDevice extends PowerDatacenter {
     protected void processModuleArrival(SimEvent ev) {
         AppModule module = (AppModule) ev.getData();
         String appId = module.getAppId();
+     // CRITICAL DEBUG
+        System.out.println("*** MODULE ARRIVAL *** " + getName() + " received module: " + module.getName());
         if (!appToModulesMap.containsKey(appId)) {
             appToModulesMap.put(appId, new ArrayList<String>());
         }

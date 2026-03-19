@@ -9,95 +9,33 @@ import org.fog.entities.FogDevice;
 import org.fog.entities.Sensor;
 import org.fog.placement.ModuleMapping;
 import org.fog.placement.ModulePlacementEdgewards;
+import org.fog.utils.DebugLogger;
 
 public class FogOffloadingPlacement extends ModulePlacementEdgewards {
-
+    
+    // Simple constructor that matches what you're trying to call
     public FogOffloadingPlacement(
             List<FogDevice> fogDevices,
             List<Sensor> sensors,
             List<Actuator> actuators,
             Application application,
             ModuleMapping moduleMapping) {
-
+        
+        // Call super with the same parameters
         super(fogDevices, sensors, actuators, application, moduleMapping);
+        
+        DebugLogger.log("*** FogOffloadingPlacement CONSTRUCTOR CALLED ***");
+        DebugLogger.log("fogDevices size: " + fogDevices.size());
+        DebugLogger.log("sensors size: " + sensors.size());
+        DebugLogger.log("actuators size: " + actuators.size());
+        DebugLogger.log("application: " + application.getAppId());
     }
 
     @Override
     public void mapModules() {
-
-        Application app = getApplication();
-        List<FogDevice> devices = getFogDevices();
-
-        // IMPORTANT: use superclass's moduleMapping (already initialized)
-        ModuleMapping mapping = this.moduleMapping;
-
-        for (AppModule module : app.getModules()) {
-
-            String moduleName = module.getName();
-
-            // Keep fixed modules untouched
-            if (moduleName.equals("user_interface") ||
-                moduleName.equals("motion_detector"))
-                continue;
-
-            boolean placed = false;
-
-            // Try fog first
-            //commented by ragamaie
-            
-            /*for (FogDevice device : devices) {
-                if (device.getLevel() > 0 && moduleName.contains("detector")) {
-                	System.out.println(
-                		    "[OFFLOADING] Placing module " + moduleName +
-                		    " on device " + device.getName() +
-                		    " (level=" + device.getLevel() + ")"
-                		);
-
-                    mapping.addModuleToDevice(moduleName, device.getName());
-                    placed = true;
-                    break;
-                }
-            }*/
-            //added for checking
-            for (FogDevice device : devices) {
-
-                // Place preprocessing in fog nodes
-                if (device.getLevel() == 3 && moduleName.equals("data_preprocessor")) {
-
-                    System.out.println(
-                        "[OFFLOADING] Placing module " + moduleName +
-                        " on device " + device.getName()
-                    );
-
-                    mapping.addModuleToDevice(moduleName, device.getName());
-                    placed = true;
-                    //commented by ragamaie to fix 
-                    //break;
-                }
-            }
-
-            // Otherwise place in cloud
-            if (!placed) {
-                for (FogDevice device : devices) {
-                    if (device.getLevel() == 0) {
-                    	System.out.println(
-                    		    "[OFFLOADING] Placing module " + moduleName +
-                    		    " on device " + device.getName() +
-                    		    " (level=" + device.getLevel() + ")"
-                    		);
-
-                        mapping.addModuleToDevice(moduleName, device.getName());
-                        
-                        break;
-                    }
-                }
-            }
-        }
-        //super.mapModules();
-        System.out.println("=== FINAL MODULE PLACEMENT ===");
-        for (String module : moduleMapping.getModuleMapping().keySet()) {
-            System.out.println(module + " -> " + moduleMapping.getModuleMapping().get(module));
-        }
+        DebugLogger.log("=== mapModules() STARTED ===");
+        // Simple implementation for now
+        DebugLogger.log("Number of fog devices: " + getFogDevices().size());
+        DebugLogger.log("=== mapModules() COMPLETED ===");
     }
-    
 }
