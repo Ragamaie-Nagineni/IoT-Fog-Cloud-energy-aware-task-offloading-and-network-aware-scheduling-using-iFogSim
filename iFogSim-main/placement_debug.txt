@@ -1,0 +1,8 @@
+=== mapModules() STARTED ===
+Number of fog devices: 7
+=== mapModules() COMPLETED ===
+*** FogOffloadingPlacement CONSTRUCTOR CALLED ***
+fogDevices size: 7
+sensors size: 8
+actuators size: 0
+application: dcns
