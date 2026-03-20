@@ -239,7 +239,7 @@ public class IndustrialIoTFog {
 		        500, 500, "TEMP_DATA", Tuple.UP, AppEdge.SENSOR);
 
 		application.addAppEdge("VIB", "data_preprocessor",
-		        3000, 3000, "VIB_DATA", Tuple.UP, AppEdge.SENSOR);
+		        300, 300, "VIB_DATA", Tuple.UP, AppEdge.SENSOR);
 
 		application.addAppEdge("data_preprocessor", "analytics",
 		        2000, 4000, "PROCESSED_DATA", Tuple.UP, AppEdge.MODULE);

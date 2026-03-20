@@ -6,3 +6,29 @@ fogDevices size: 7
 sensors size: 8
 actuators size: 0
 application: dcns
+=== mapModules() STARTED ===
+[PLACEMENT] data_preprocessor -> sensor-node-0-0
+[PLACEMENT] data_preprocessor -> sensor-node-0-1
+[PLACEMENT] data_preprocessor -> sensor-node-0-2
+[PLACEMENT] data_preprocessor -> sensor-node-0-3
+[PLACEMENT] analytics -> CLOUD
+[PLACEMENT] cloud_storage -> CLOUD
+=== mapModules() COMPLETED ===
+*** FogOffloadingPlacement CONSTRUCTOR CALLED ***
+fogDevices size: 7
+sensors size: 8
+actuators size: 0
+application: dcns
+=== mapModules() STARTED ===
+[PLACEMENT] data_preprocessor -> sensor-node-0-0
+[PLACEMENT] data_preprocessor -> sensor-node-0-1
+[PLACEMENT] data_preprocessor -> sensor-node-0-2
+[PLACEMENT] data_preprocessor -> sensor-node-0-3
+[PLACEMENT] analytics -> CLOUD
+[PLACEMENT] cloud_storage -> CLOUD
+=== mapModules() COMPLETED ===
+*** FogOffloadingPlacement CONSTRUCTOR CALLED ***
+fogDevices size: 7
+sensors size: 8
+actuators size: 0
+application: dcns
