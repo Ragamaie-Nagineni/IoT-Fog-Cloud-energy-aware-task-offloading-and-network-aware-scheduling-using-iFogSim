@@ -680,6 +680,18 @@ public class FogDevice extends PowerDatacenter {
     		    "[ARRIVAL CHECK] Device=" + getName() +
     		    " received tuple=" + tuple.getTupleType()
     		);
+    	double cpuUtil = getHost().getUtilizationOfCpu();
+
+        DebugLogger.log("[CPU CHECK] Device=" + getName() + " Utilization=" + cpuUtil);
+
+        if (cpuUtil > 0.80) {  // 80% threshold
+            
+            DebugLogger.log("[OFFLOAD] " + tuple.getTupleType() + 
+                " from " + getName() + " → sending to parent");
+
+            sendUp(tuple);
+            return;
+        }
        
         /// (Converting IoT data into computational tasks) as a verification sub-step.
         Log.printLine(
