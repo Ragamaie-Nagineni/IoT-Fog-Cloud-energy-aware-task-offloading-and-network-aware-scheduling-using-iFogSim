@@ -56,7 +56,6 @@ public class FogOffloadingPlacement extends ModulePlacementEdgewards {
                     placed = true;
                 }
             }
-
             // Place others in cloud
             if (!placed) {
                 for (FogDevice device : devices) {

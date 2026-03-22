@@ -666,8 +666,8 @@ public class FogDevice extends PowerDatacenter {
                 return;
             }
         }
-        for (int childId : getChildrenIds()) {
-            sendDown(tuple, childId);
+        for (int child : getChildrenIds()) {
+            sendDown(tuple, child);
         }
     }
 
@@ -676,22 +676,27 @@ public class FogDevice extends PowerDatacenter {
     protected void processTupleArrival(SimEvent ev) {
     	//adding a print statement to debug by ragamaie
     	 Tuple tuple = (Tuple) ev.getData();
-    	System.out.println(
-    		    "[ARRIVAL CHECK] Device=" + getName() +
-    		    " received tuple=" + tuple.getTupleType()
-    		);
-    	double cpuUtil = getHost().getUtilizationOfCpu();
+    	 double cpuUtil = getHost().getUtilizationOfCpu();
 
-        DebugLogger.log("[CPU CHECK] Device=" + getName() + " Utilization=" + cpuUtil);
+    	 DebugLogger.log("[CPU CHECK] Device=" + getName() + " Utilization=" + cpuUtil);
 
-        if (cpuUtil > 0.80) {  // 80% threshold
-            
-            DebugLogger.log("[OFFLOAD] " + tuple.getTupleType() + 
-                " from " + getName() + " → sending to parent");
+    	 //  STEP 1: If CLOUD → NEVER offload, just execute
+    	 if (getParentId() == -1) {
+    	     DebugLogger.log("[EXECUTE CLOUD] " + tuple.getTupleType() + " at " + getName());
+    	     // DO NOT return here → let normal execution happen
+    	 }
 
-            sendUp(tuple);
-            return;
-        }
+    	 //  STEP 2: If overloaded AND not cloud → offload
+    	 else if (cpuUtil > 0.80 ) {
+    	     DebugLogger.log("[OFFLOAD] " + tuple.getTupleType() +
+    	         " from " + getName() + " → sending to parent");
+
+    	     sendUp(tuple);
+    	     return;
+    	 }
+
+    	 // STEP 3: Otherwise → continue normal flow
+    	 DebugLogger.log("[LOCAL EXECUTION PATH] " + tuple.getTupleType() + " at " + getName());
        
         /// (Converting IoT data into computational tasks) as a verification sub-step.
         Log.printLine(
@@ -724,16 +729,9 @@ public class FogDevice extends PowerDatacenter {
             updateCloudTraffic();
         }
 		
-		/*if(getName().equals("d-0") && tuple.getTupleType().equals("_SENSOR")){
-			System.out.println(++numClients);
-		}*/
         Logger.debug(getName(), "Received tuple " + tuple.getCloudletId() + "with tupleType = " + tuple.getTupleType() + "\t| Source : " +
                 CloudSim.getEntityName(ev.getSource()) + "|Dest : " + CloudSim.getEntityName(ev.getDestination()));
 		
-		/*if(CloudSim.getEntityName(ev.getSource()).equals("drone_0")||CloudSim.getEntityName(ev.getDestination()).equals("drone_0"))
-			System.out.println(CloudSim.clock()+" "+getName()+" Received tuple "+tuple.getCloudletId()+" with tupleType = "+tuple.getTupleType()+"\t| Source : "+
-		CloudSim.getEntityName(ev.getSource())+"|Dest : "+CloudSim.getEntityName(ev.getDestination()));*/
-
         send(ev.getSource(), CloudSim.getMinTimeBetweenEvents(), FogEvents.TUPLE_ACK);
 
         if (FogUtils.appIdToGeoCoverageMap.containsKey(tuple.getAppId())) {
@@ -763,67 +761,7 @@ public class FogDevice extends PowerDatacenter {
             sendNow(getControllerId(), FogEvents.TUPLE_FINISHED, null);
         }
 
-        /*if (appToModulesMap.containsKey(tuple.getAppId())) {
-            if (appToModulesMap.get(tuple.getAppId()).contains(tuple.getDestModuleName())) {
-                int vmId = -1;
-                for (Vm vm : getHost().getVmList()) {
-                    if (((AppModule) vm).getName().equals(tuple.getDestModuleName()))
-                        vmId = vm.getId();
-                }
-                if (vmId < 0
-                        || (tuple.getModuleCopyMap().containsKey(tuple.getDestModuleName()) &&
-                        tuple.getModuleCopyMap().get(tuple.getDestModuleName()) != vmId)) {
-                    return;
-                }
-                tuple.setVmId(vmId);
-                //Logger.error(getName(), "Executing tuple for operator " + moduleName);
-
-                updateTimingsOnReceipt(tuple);
-                // edited by ragamaie for Short cpu time first
-                //executeTuple(ev, tuple.getDestModuleName()); commented this for adding more
-                
-                
-             // Add tuple to scheduling queue
-                schedulingQueue.add(tuple);
-
-                // Sort tasks by CPU length (Shortest Job First scheduling)
-                Collections.sort(schedulingQueue, new Comparator<Tuple>() {
-                    @Override
-                    public int compare(Tuple t1, Tuple t2) {
-                        return Long.compare(t1.getCloudletLength(), t2.getCloudletLength());
-                    }
-                });
-
-                // Execute the highest priority task
-                Tuple nextTask = schedulingQueue.remove(0);
-             // DEBUG: show scheduler decision
-                System.out.println(
-                    "[SCHEDULER] Executing task " + nextTask.getTupleType() +
-                    " | CPU:" + nextTask.getCloudletLength() +
-                    " | DEVICE:" + getName()
-                );
-                executeTuple(ev, nextTask.getDestModuleName());
-                //
-                
-                
-            } else if (tuple.getDestModuleName() != null) {
-                if (tuple.getDirection() == Tuple.UP)
-                    sendUp(tuple);
-                else if (tuple.getDirection() == Tuple.DOWN) {
-                    for (int childId : getChildrenIds())
-                        sendDown(tuple, childId);
-                }
-            } else {
-                sendUp(tuple);
-            }
-        } else {
-            if (tuple.getDirection() == Tuple.UP)
-                sendUp(tuple);
-            else if (tuple.getDirection() == Tuple.DOWN) {
-                for (int childId : getChildrenIds())
-                    sendDown(tuple, childId);
-            }
-        }*/
+     
         if (appToModulesMap.containsKey(tuple.getAppId()) && 
         	    appToModulesMap.get(tuple.getAppId()).contains(tuple.getDestModuleName())) {
         	    
