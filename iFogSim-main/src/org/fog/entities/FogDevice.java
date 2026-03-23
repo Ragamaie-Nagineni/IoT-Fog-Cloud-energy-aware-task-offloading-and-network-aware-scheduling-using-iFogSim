@@ -672,29 +672,54 @@ public class FogDevice extends PowerDatacenter {
     }
 
     int numClients = 0;
+    double computeFitnessLocal(Tuple t) {
+        double energy = t.getCloudletLength() * 0.5;
+        double delay = t.getCloudletLength() / getHost().getTotalMips();
+        return energy + delay;
+    }
+    double computeFitnessFog(Tuple t) {
+        double fogMips = getHost().getTotalMips() * 1.5; // assume parent is stronger
+        double energy = t.getCloudletLength() * 0.4;
+        double delay = t.getCloudletLength() / fogMips;
+        return energy + delay;
+    }
 
+    double computeFitnessCloud(Tuple t) {
+        double cloudMips = getHost().getTotalMips() * 3; // cloud strongest
+        double energy = t.getCloudletLength() * 0.3;
+        double delay = t.getCloudletLength() / cloudMips;
+        return energy + delay;
+    }
     protected void processTupleArrival(SimEvent ev) {
-    	//adding a print statement to debug by ragamaie
-    	 Tuple tuple = (Tuple) ev.getData();
-    	 double cpuUtil = getHost().getUtilizationOfCpu();
+    	Tuple tuple = (Tuple) ev.getData();
 
-    	 DebugLogger.log("[CPU CHECK] Device=" + getName() + " Utilization=" + cpuUtil);
+    	// STEP 1: If CLOUD → always execute
+    	if (getParentId() == -1) {
+    	    DebugLogger.log("[CLOUD EXECUTION] " + tuple.getTupleType() + " at " + getName());
+    	}
+    	else {
+    	    // STEP 2: Evaluate fitness
+    	    double localFitness = computeFitnessLocal(tuple);
+    	    double fogFitness = computeFitnessFog(tuple);
+    	    double cloudFitness = computeFitnessCloud(tuple);
 
-    	 //  STEP 1: If CLOUD → NEVER offload, just execute
-    	 if (getParentId() == -1) {
-    	     DebugLogger.log("[EXECUTE CLOUD] " + tuple.getTupleType() + " at " + getName());
-    	     // DO NOT return here → let normal execution happen
-    	 }
+    	    double min = Math.min(localFitness, Math.min(fogFitness, cloudFitness));
 
-    	 //  STEP 2: If overloaded AND not cloud → offload
-    	 else if (cpuUtil > 0.80 ) {
-    	     DebugLogger.log("[OFFLOAD] " + tuple.getTupleType() +
-    	         " from " + getName() + " → sending to parent");
-
-    	     sendUp(tuple);
-    	     return;
-    	 }
-
+    	    if (min == localFitness) {
+    	        DebugLogger.log("[MOAOA] Executing locally at " + getName());
+    	        // continue normal execution
+    	    }
+    	    else if (min == fogFitness) {
+    	        DebugLogger.log("[MOAOA] Offloading to parent from " + getName());
+    	        sendUp(tuple);
+    	        return;
+    	    }
+    	    else {
+    	        DebugLogger.log("[MOAOA] Offloading to cloud from " + getName());
+    	        sendUp(tuple); // for now cloud = parent chain
+    	        return;
+    	    }
+    	}
     	 // STEP 3: Otherwise → continue normal flow
     	 DebugLogger.log("[LOCAL EXECUTION PATH] " + tuple.getTupleType() + " at " + getName());
        
