@@ -695,8 +695,8 @@ public class FogDevice extends PowerDatacenter {
     double computeFitnessCloud(Tuple t) {
         double cloudMips = getHost().getTotalMips() * 2;
 
-        double transmissionDelay = 5; // IMPORTANT
-        double transmissionEnergy = 3; // IMPORTANT
+        double transmissionDelay = 8;   // ↑ increase
+        double transmissionEnergy = 5;  // ↑ increase
 
         double energy = t.getCloudletLength() * 0.3 + transmissionEnergy;
         double delay = t.getCloudletLength() / cloudMips + transmissionDelay;
@@ -728,11 +728,11 @@ public class FogDevice extends PowerDatacenter {
     	        return;
     	    }
     	    else {
-    	        DebugLogger.log("[MOAOA] Offloading to cloud from " + getName());
-    	        sendUp(tuple); // for now cloud = parent chain
+    	        DebugLogger.log("[MOAOA] Offloading upward (towards cloud) from " + getName());
+    	        sendUp(tuple);
     	        return;
+    	        }
     	    }
-    	}
     	 // STEP 3: Otherwise → continue normal flow
     	 DebugLogger.log("[LOCAL EXECUTION PATH] " + tuple.getTupleType() + " at " + getName());
        
