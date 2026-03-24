@@ -672,22 +672,35 @@ public class FogDevice extends PowerDatacenter {
     }
 
     int numClients = 0;
+    
     double computeFitnessLocal(Tuple t) {
+        double mips = getHost().getTotalMips();
         double energy = t.getCloudletLength() * 0.5;
-        double delay = t.getCloudletLength() / getHost().getTotalMips();
+        double delay = t.getCloudletLength() / mips;
         return energy + delay;
     }
+    
     double computeFitnessFog(Tuple t) {
-        double fogMips = getHost().getTotalMips() * 1.5; // assume parent is stronger
-        double energy = t.getCloudletLength() * 0.4;
-        double delay = t.getCloudletLength() / fogMips;
+        double fogMips = getHost().getTotalMips() * 1.5;
+
+        double transmissionDelay = 2;
+        double transmissionEnergy = 1;
+
+        double energy = t.getCloudletLength() * 0.4 + transmissionEnergy;
+        double delay = t.getCloudletLength() / fogMips + transmissionDelay;
+
         return energy + delay;
     }
-
+    
     double computeFitnessCloud(Tuple t) {
-        double cloudMips = getHost().getTotalMips() * 3; // cloud strongest
-        double energy = t.getCloudletLength() * 0.3;
-        double delay = t.getCloudletLength() / cloudMips;
+        double cloudMips = getHost().getTotalMips() * 2;
+
+        double transmissionDelay = 5; // IMPORTANT
+        double transmissionEnergy = 3; // IMPORTANT
+
+        double energy = t.getCloudletLength() * 0.3 + transmissionEnergy;
+        double delay = t.getCloudletLength() / cloudMips + transmissionDelay;
+
         return energy + delay;
     }
     protected void processTupleArrival(SimEvent ev) {
