@@ -48,9 +48,8 @@ public class FogOffloadingPlacement extends ModulePlacementEdgewards {
 
             // Place data_preprocessor on sensor nodes (level 3)
             for (FogDevice device : devices) {
-            	if ((device.getLevel() == 3 || device.getLevel() == 0) 
-            	        && moduleName.equals("data_preprocessor")) {
-
+            	if (device.getLevel() == 3 && moduleName.equals("data_preprocessor")) {
+                    
                     DebugLogger.log("[PLACEMENT] " + moduleName + " -> " + device.getName());
 
                     mapping.addModuleToDevice(moduleName, device.getName());

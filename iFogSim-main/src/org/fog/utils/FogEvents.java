@@ -3,6 +3,7 @@ package org.fog.utils;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 
 public enum FogEvents implements CloudSimTags {
+	
     TUPLE_ARRIVAL,
     LAUNCH_MODULE,
     RELEASE_OPERATOR,
@@ -40,5 +41,6 @@ public enum FogEvents implements CloudSimTags {
     TRANSMIT_PR,
     MANAGEMENT_TUPLE_ARRIVAL,
     UPDATE_RESOURCE_INFO,
-    START_DYNAMIC_CLUSTERING;
+    START_DYNAMIC_CLUSTERING,
+	MOAOA_OPTIMIZE;
 }

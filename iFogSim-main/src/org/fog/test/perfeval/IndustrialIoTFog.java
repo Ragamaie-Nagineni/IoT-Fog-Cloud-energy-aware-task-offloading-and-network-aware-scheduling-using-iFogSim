@@ -87,6 +87,11 @@ public class IndustrialIoTFog {
 			// Create controller
 			controller = new Controller("master-controller", fogDevices, sensors, actuators);
 
+			// Set controller ID on all fog devices
+			for (FogDevice device : fogDevices) {
+			    device.setControllerId(controller.getId());
+			}
+			
 			// Submit application
 			controller.submitApplication(application, placement);
 			

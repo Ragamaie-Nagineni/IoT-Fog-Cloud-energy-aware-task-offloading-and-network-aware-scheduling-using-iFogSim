@@ -21,6 +21,11 @@ import org.fog.utils.FogUtils;
 import org.fog.utils.NetworkUsageMonitor;
 import org.fog.utils.TimeKeeper;
 
+import java.util.ArrayList;
+import java.util.List;
+import org.fog.entities.Tuple;
+
+
 public class Controller extends SimEntity{
 	
 	public static boolean ONLY_CLOUD = false;
@@ -33,6 +38,14 @@ public class Controller extends SimEntity{
 	private Map<String, Integer> appLaunchDelays;
 
 	private Map<String, ModulePlacement> appModulePlacementPolicy;
+	
+	private List<Tuple> pendingTasks = new ArrayList<>();
+	private int populationSize = 100;          // from paper (Table 8)
+	private int maxIterations = 150;           // from paper
+	private double Vmax = 0.9;                 // from paper
+	private double Vmin = 0.2;                 // from paper
+	private double escalationParameter = 5;     // from paper (α)
+	private double controlParameter = 0.5;      // from paper (Cp)
 	
 	public Controller(String name, List<FogDevice> fogDevices, List<Sensor> sensors, List<Actuator> actuators) {
 		super(name);
@@ -74,7 +87,7 @@ public class Controller extends SimEntity{
 				processAppSubmit(applications.get(appId));
 			else
 				send(getId(), getAppLaunchDelays().get(appId), FogEvents.APP_SUBMIT, applications.get(appId));
-		}
+		}double newFitness = 0;
 
 		send(getId(), Config.RESOURCE_MANAGE_INTERVAL, FogEvents.CONTROLLER_RESOURCE_MANAGE);
 		
@@ -82,8 +95,196 @@ public class Controller extends SimEntity{
 		
 		for(FogDevice dev : getFogDevices())
 			sendNow(dev.getId(), FogEvents.RESOURCE_MGMT);
-
+		send(getId(), 1.0, FogEvents.MOAOA_OPTIMIZE);
 	}
+	private void processTupleArrival(SimEvent ev) {
+	    Tuple tuple = (Tuple) ev.getData();
+	    pendingTasks.add(tuple);
+	    System.out.println(CloudSim.clock() + " Controller received tuple: " 
+	            + tuple.getTupleType() + " from " + CloudSim.getEntityName(ev.getSource()));
+	}
+	private void runMOAOAAndAssign() {
+	    if (pendingTasks.isEmpty()) return;
+	    
+	    int numTasks = pendingTasks.size();
+	    List<FogDevice> computeNodes = new ArrayList<>(fogDevices);
+	    int numNodes = computeNodes.size();
+	    
+	    // Pre‑compute for each node: MIPS, bandwidth, power constants (from paper)
+	    double[] nodeMips = new double[numNodes];
+	    double[] nodeBandwidth = new double[numNodes];
+	    double[] nodeEnergyParams = new double[numNodes]; // for energy model
+	    for (int i = 0; i < numNodes; i++) {
+	        FogDevice dev = computeNodes.get(i);
+	        nodeMips[i] = dev.getHost().getTotalMips();          // MIPS
+	        nodeBandwidth[i] = dev.getUplinkBandwidth();         // bandwidth
+	        // Energy parameters: you may need to extract from device characteristics
+	        // For now, use default constants from paper (Table 8)
+	        nodeEnergyParams[i] = 0.5; // placeholder
+	    }
+	    
+	    // Pre‑compute for each task: length, data size, type (for priority)
+	    double[] taskLength = new double[numTasks];
+	    double[] taskDataSize = new double[numTasks];
+	    int[] taskPriority = new int[numTasks];
+	    for (int i = 0; i < numTasks; i++) {
+	        Tuple t = pendingTasks.get(i);
+	        taskLength[i] = t.getCloudletLength();
+	        taskDataSize[i] = t.getCloudletFileSize();
+	        taskPriority[i] = 1; // default priority
+	    }
+	    
+	    // MOAOA parameters
+	    double moa, mop;
+	    double r1, r2, r3;
+	    int archiveSize = populationSize;
+	    List<int[][]> population = new ArrayList<>();
+	    List<Double> fitness = new ArrayList<>();
+	    List<int[][]> archive = new ArrayList<>();
+	    
+	    // Initialize population randomly (binary matrices)
+	    for (int i = 0; i < populationSize; i++) {
+	        int[][] solution = new int[numTasks][numNodes];
+	        for (int t = 0; t < numTasks; t++) {
+	            int chosen = (int)(Math.random() * numNodes);
+	            solution[t][chosen] = 1;
+	        }
+	        population.add(solution);
+	    }
+	    
+	    // Main loop
+	    for (int iter = 0; iter < maxIterations; iter++) {
+	        // Compute MOA and MOP (Eq. 1 and 18)
+	        moa = Vmin + iter * ((Vmax - Vmin) / maxIterations);
+	        mop = 1 - Math.pow(iter / maxIterations, escalationParameter);
+	        
+	        // Evaluate fitness for each solution
+	        fitness.clear();
+	        for (int[][] sol : population) {
+	            double totalDelay = 0, totalEnergy = 0;
+	            for (int t = 0; t < numTasks; t++) {
+	                int nodeIdx = -1;
+	                for (int n = 0; n < numNodes; n++) {
+	                    if (sol[t][n] == 1) { nodeIdx = n; break; }
+	                }
+	                // Compute delay and energy using paper's formulas (Eq. 4-15)
+	                // Simplified: 
+	                //   delay = taskLength[t] / nodeMips[nodeIdx] + taskDataSize[t] / nodeBandwidth[nodeIdx]
+	                //   energy = taskLength[t] * nodeEnergyParams[nodeIdx]
+	                double delay = taskLength[t] / nodeMips[nodeIdx] + taskDataSize[t] / nodeBandwidth[nodeIdx];
+	                double energy = taskLength[t] * nodeEnergyParams[nodeIdx];
+	                totalDelay += delay;
+	                totalEnergy += energy;
+	            }
+	            // Combined fitness (Eq. 3, W=0.5)
+	            double fit = 0.5 * totalDelay + 0.5 * totalEnergy;
+	            fitness.add(fit);
+	        }
+	        
+	        // Update archive with Pareto front (using crowding distance)
+	        // (Implement crowding distance if you want multiple objectives)
+	        // For simplicity, we store all non‑dominated solutions.
+	        // (You can implement a proper Pareto archive here.)
+	        
+	        // Update positions for each solution
+	        for (int i = 0; i < populationSize; i++) {
+	            int[][] current = population.get(i);
+	            int[][] newSol = new int[numTasks][numNodes];
+	            r1 = Math.random(); r2 = Math.random(); r3 = Math.random();
+	            if (r1 <= moa) { // exploitation
+	                for (int t = 0; t < numTasks; t++) {
+	                    int nodeIdx = -1;
+	                    for (int n = 0; n < numNodes; n++) {
+	                        if (current[t][n] == 1) { nodeIdx = n; break; }
+	                    }
+	                    double step = mop * (controlParameter * (Math.random() * 2 - 1));
+	                    if (r3 > 0.5) { // addition
+	                        nodeIdx = (nodeIdx + (int)step) % numNodes;
+	                    } else { // subtraction
+	                        nodeIdx = (nodeIdx - (int)step) % numNodes;
+	                        if (nodeIdx < 0) nodeIdx += numNodes;
+	                    }
+	                    newSol[t][nodeIdx] = 1;
+	                }
+	            } else { // exploration
+	                // Use multiplication/division operators (Eq. 17)
+	                // For binary, we can choose a different node based on MOP
+	                for (int t = 0; t < numTasks; t++) {
+	                    int nodeIdx = -1;
+	                    for (int n = 0; n < numNodes; n++) {
+	                        if (current[t][n] == 1) { nodeIdx = n; break; }
+	                    }
+	                    double change = mop * (controlParameter * (Math.random() * 2 - 1));
+	                    if (r2 <= 0.5) { // division
+	                        nodeIdx = (nodeIdx + (int)change) % numNodes;
+	                    } else { // multiplication
+	                        nodeIdx = (nodeIdx * (int)(1 + change)) % numNodes;
+	                    }
+	                    newSol[t][nodeIdx] = 1;
+	                }
+	            }
+	            // Replace current with new if better (greedy selection)
+	            
+	            double newFitness = 0;
+
+	            for (int t = 0; t < numTasks; t++) {
+	                int nodeIdx = -1;
+	                for (int n = 0; n < numNodes; n++) {
+	                    if (newSol[t][n] == 1) { nodeIdx = n; break; }
+	                }
+
+	                double delay = taskLength[t] / nodeMips[nodeIdx] 
+	                             + taskDataSize[t] / nodeBandwidth[nodeIdx];
+
+	                double energy = taskLength[t] * nodeEnergyParams[nodeIdx];
+
+	                newFitness += 0.5 * delay + 0.5 * energy;
+	            }
+	        }
+	    }
+	    
+	    // After iterations, select the best solution (e.g., minimal fitness)
+	    int bestIdx = 0;
+	    for (int i = 1; i < fitness.size(); i++) {
+	        if (fitness.get(i) < fitness.get(bestIdx)) bestIdx = i;
+	    }
+	    int[][] bestSolution = population.get(bestIdx);
+
+	 // ✅ ADD THIS BLOCK HERE
+	 System.out.println("\n=== MOAOA DECISION ===");
+
+	 for (int t = 0; t < numTasks; t++) {
+	     int nodeIdx = -1;
+	     for (int n = 0; n < numNodes; n++) {
+	         if (bestSolution[t][n] == 1) {
+	             nodeIdx = n;
+	             break;
+	         }
+	     }
+
+	     System.out.println(
+	         "Task " + pendingTasks.get(t).getTupleType() +
+	         " -> Assigned to " + computeNodes.get(nodeIdx).getName()
+	     );
+	 }
+	    
+	    // Assign tasks according to bestSolution
+	    for (int t = 0; t < numTasks; t++) {
+	        Tuple tuple = pendingTasks.get(t);
+	        int nodeIdx = -1;
+	        for (int n = 0; n < numNodes; n++) {
+	            if (bestSolution[t][n] == 1) { nodeIdx = n; break; }
+	        }
+	        if (nodeIdx >= 0) {
+	            FogDevice targetDevice = computeNodes.get(nodeIdx);
+	            // Send tuple to the chosen device
+	            sendNow(targetDevice.getId(), FogEvents.TUPLE_ARRIVAL, tuple);
+	        }
+	    }
+	    
+	    pendingTasks.clear();
+	}
+	
 
 	@Override
 	public void processEvent(SimEvent ev) {
@@ -105,6 +306,13 @@ public class Controller extends SimEntity{
 			printNetworkUsageDetails();
 			System.exit(0);
 			break;
+		case FogEvents.TUPLE_ARRIVAL:
+		    processTupleArrival(ev);
+		    break;
+		case FogEvents.MOAOA_OPTIMIZE:
+		    runMOAOAAndAssign();
+		    send(getId(), 5.0, FogEvents.MOAOA_OPTIMIZE); // repeat every 5 seconds
+		    break;
 
             default:
                 throw new IllegalStateException("Unexpected value: " + ev.getTag());

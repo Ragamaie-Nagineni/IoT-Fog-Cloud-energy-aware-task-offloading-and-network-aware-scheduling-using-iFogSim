@@ -673,7 +673,7 @@ public class FogDevice extends PowerDatacenter {
 
     int numClients = 0;
     
-    double computeFitnessLocal(Tuple t) {
+   /* double computeFitnessLocal(Tuple t) {
         double mips = getHost().getTotalMips();
         double energy = t.getCloudletLength() * 0.5;
         double delay = t.getCloudletLength() / mips;
@@ -681,173 +681,27 @@ public class FogDevice extends PowerDatacenter {
     }
     
     double computeFitnessFog(Tuple t) {
-        double fogMips = getHost().getTotalMips() * 1.5;
-
-        double transmissionDelay = 2;
-        double transmissionEnergy = 1;
-
-        double energy = t.getCloudletLength() * 0.4 + transmissionEnergy;
-        double delay = t.getCloudletLength() / fogMips + transmissionDelay;
-
-        return energy + delay;
+        double delay = t.getCloudletLength() / 1000; // assume fog MIPS
+        double energy = t.getCloudletLength() * 0.3;
+        return delay + energy;
     }
-    
+
     double computeFitnessCloud(Tuple t) {
-        double cloudMips = getHost().getTotalMips() * 2;
-
-        double transmissionDelay = 8;   // ↑ increase
-        double transmissionEnergy = 5;  // ↑ increase
-
-        double energy = t.getCloudletLength() * 0.3 + transmissionEnergy;
-        double delay = t.getCloudletLength() / cloudMips + transmissionDelay;
-
-        return energy + delay;
-    }
+        double delay = t.getCloudletLength() / 3000; // faster
+        double network = t.getCloudletFileSize() / getUplinkBandwidth();
+        double energy = t.getCloudletLength() * 0.8;
+        return delay + energy + network;
+    }*/
+    
     protected void processTupleArrival(SimEvent ev) {
-    	Tuple tuple = (Tuple) ev.getData();
 
-    	// STEP 1: If CLOUD → always execute
-    	if (getParentId() == -1) {
-    	    DebugLogger.log("[CLOUD EXECUTION] " + tuple.getTupleType() + " at " + getName());
-    	}
-    	else {
-    	    // STEP 2: Evaluate fitness
-    	    double localFitness = computeFitnessLocal(tuple);
-    	    double fogFitness = computeFitnessFog(tuple);
-    	    double cloudFitness = computeFitnessCloud(tuple);
+        Tuple tuple = (Tuple) ev.getData();
 
-    	    double min = Math.min(localFitness, Math.min(fogFitness, cloudFitness));
+        // ✅ Send ALL tuples to controller for MOAOA scheduling
+        sendNow(getControllerId(), FogEvents.TUPLE_ARRIVAL, tuple);
 
-    	    if (min == localFitness) {
-    	        DebugLogger.log("[MOAOA] Executing locally at " + getName());
-    	        // continue normal execution
-    	    }
-    	    else if (min == fogFitness) {
-    	        DebugLogger.log("[MOAOA] Offloading to parent from " + getName());
-    	        sendUp(tuple);
-    	        return;
-    	    }
-    	    else {
-    	        DebugLogger.log("[MOAOA] Offloading upward (towards cloud) from " + getName());
-    	        sendUp(tuple);
-    	        return;
-    	        }
-    	    }
-    	 // STEP 3: Otherwise → continue normal flow
-    	 DebugLogger.log("[LOCAL EXECUTION PATH] " + tuple.getTupleType() + " at " + getName());
-       
-        /// (Converting IoT data into computational tasks) as a verification sub-step.
-        Log.printLine(
-        	    CloudSim.clock()
-        	    + " | Device: " + getName()
-        	    + " | TupleType: " + tuple.getTupleType()
-        	    + " | CPU: " + tuple.getCloudletLength()
-        	    + " | DataSize: " + tuple.getCloudletFileSize()
-        	    + " | SrcModule: " + tuple.getSrcModuleName()
-        	    + " | DestModule: " + tuple.getDestModuleName()
-        	);
-        //added by ragamaie for checking tasks for fog controlller to analyze
-        System.out.println(
-                "TASK ARRIVED -> " +
-                tuple.getTupleType() +
-                " | CPU:" + tuple.getCloudletLength() +
-                " | SIZE:" + tuple.getCloudletFileSize() +
-                " | DEVICE:" + getName() +
-                " | TIME:" + CloudSim.clock()
-            );
-        //adding a print statement to debug (by ragamaie)
-        System.out.println(
-        	    "[CHECK] Device=" + getName() +
-        	    " | DestModule=" + tuple.getDestModuleName() +
-        	    " | ModulesHere=" + appToModulesMap.get(tuple.getAppId())
-        	);
-
-        /// 
-        if (getName().equals("cloud")) {
-            updateCloudTraffic();
-        }
-		
-        Logger.debug(getName(), "Received tuple " + tuple.getCloudletId() + "with tupleType = " + tuple.getTupleType() + "\t| Source : " +
-                CloudSim.getEntityName(ev.getSource()) + "|Dest : " + CloudSim.getEntityName(ev.getDestination()));
-		
-        send(ev.getSource(), CloudSim.getMinTimeBetweenEvents(), FogEvents.TUPLE_ACK);
-
-        if (FogUtils.appIdToGeoCoverageMap.containsKey(tuple.getAppId())) {
-        }
-
-        if (tuple.getDirection() == Tuple.ACTUATOR) {
-            sendTupleToActuator(tuple);
-            return;
-        }
-
-        if (getHost().getVmList().size() > 0) {
-            final AppModule operator = (AppModule) getHost().getVmList().get(0);
-            if (CloudSim.clock() > 0) {
-                getHost().getVmScheduler().deallocatePesForVm(operator);
-                getHost().getVmScheduler().allocatePesForVm(operator, new ArrayList<Double>() {
-                    protected static final long serialVersionUID = 1L;
-
-                    {
-                        add((double) getHost().getTotalMips());
-                    }
-                });
-            }
-        }
-
-
-        if (getName().equals("cloud") && tuple.getDestModuleName() == null) {
-            sendNow(getControllerId(), FogEvents.TUPLE_FINISHED, null);
-        }
-
-     
-        if (appToModulesMap.containsKey(tuple.getAppId()) && 
-        	    appToModulesMap.get(tuple.getAppId()).contains(tuple.getDestModuleName())) {
-        	    
-        	    int vmId = -1;
-        	    for (Vm vm : getHost().getVmList()) {
-        	        if (((AppModule) vm).getName().equals(tuple.getDestModuleName()))
-        	            vmId = vm.getId();
-        	    }
-        	    
-        	    if (vmId >= 0) {
-        	        tuple.setVmId(vmId);
-        	        updateTimingsOnReceipt(tuple);
-        	        
-        	        // DEBUG: show execution
-        	        System.out.println(
-        	            "[EXECUTING] Device " + getName() +
-        	            " running " + tuple.getTupleType() +
-        	            " on module " + tuple.getDestModuleName() +
-        	            " CPU:" + tuple.getCloudletLength()
-        	        );
-        	        
-        	        executeTuple(ev, tuple.getDestModuleName());  // Execute directly
-        	    } else {
-        	        // Module not found on this device, forward
-        	        if (tuple.getDirection() == Tuple.UP)
-        	            sendUp(tuple);
-        	        else if (tuple.getDirection() == Tuple.DOWN) {
-        	            for (int childId : getChildrenIds())
-        	                sendDown(tuple, childId);
-        	        }
-        	    }
-        	} else if (tuple.getDestModuleName() != null) {
-        	    // Module not on this device, forward appropriately
-        	    if (tuple.getDirection() == Tuple.UP)
-        	        sendUp(tuple);
-        	    else if (tuple.getDirection() == Tuple.DOWN) {
-        	        for (int childId : getChildrenIds())
-        	            sendDown(tuple, childId);
-        	    }
-        	} else {
-        	    // No destination module specified
-        	    if (tuple.getDirection() == Tuple.UP)
-        	        sendUp(tuple);
-        	    else if (tuple.getDirection() == Tuple.DOWN) {
-        	        for (int childId : getChildrenIds())
-        	            sendDown(tuple, childId);
-        	    }
-        	}
+        // STOP further processing in this device
+        
     }
 
     protected void updateTimingsOnReceipt(Tuple tuple) {
