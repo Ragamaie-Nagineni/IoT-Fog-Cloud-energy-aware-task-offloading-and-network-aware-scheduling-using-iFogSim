@@ -95,15 +95,23 @@ public class Controller extends SimEntity{
 		
 		for(FogDevice dev : getFogDevices())
 			sendNow(dev.getId(), FogEvents.RESOURCE_MGMT);
-		send(getId(), 1.0, FogEvents.MOAOA_OPTIMIZE);
+		//send(getId(), 1.0, FogEvents.MOAOA_OPTIMIZE);
+		if (!pendingTasks.isEmpty()) {
+		    sendNow(getId(), FogEvents.MOAOA_OPTIMIZE);
+		}
 	}
 	private void processTupleArrival(SimEvent ev) {
 	    Tuple tuple = (Tuple) ev.getData();
-	    pendingTasks.add(tuple);
-	    System.out.println(CloudSim.clock() + " Controller received tuple: " 
-	            + tuple.getTupleType() + " from " + CloudSim.getEntityName(ev.getSource()));
+
+	    String src = CloudSim.getEntityName(ev.getSource());
+
+	    // Only accept tuples from sensors
+	    if (src.startsWith("sensor") && tuple.getUserId() != -1) {
+	        pendingTasks.add(tuple);
+	    }
 	}
 	private void runMOAOAAndAssign() {
+		
 	    if (pendingTasks.isEmpty()) return;
 	    
 	    int numTasks = pendingTasks.size();
@@ -227,7 +235,7 @@ public class Controller extends SimEntity{
 	            
 	            double newFitness = 0;
 
-	            for (int t = 0; t < numTasks; t++) {
+	            /*for (int t = 0; t < numTasks; t++) {
 	                int nodeIdx = -1;
 	                for (int n = 0; n < numNodes; n++) {
 	                    if (newSol[t][n] == 1) { nodeIdx = n; break; }
@@ -239,7 +247,7 @@ public class Controller extends SimEntity{
 	                double energy = taskLength[t] * nodeEnergyParams[nodeIdx];
 
 	                newFitness += 0.5 * delay + 0.5 * energy;
-	            }
+	            }*/
 	        }
 	    }
 	    
@@ -251,6 +259,30 @@ public class Controller extends SimEntity{
 	    int[][] bestSolution = population.get(bestIdx);
 
 	 // ✅ ADD THIS BLOCK HERE
+	    for (int t = 0; t < numTasks; t++) {
+	        Tuple tuple = pendingTasks.get(t);
+
+	        if (tuple.getDestModuleName() != null)
+	            continue;
+
+	        int nodeIdx = -1;
+	        for (int n = 0; n < numNodes; n++) {
+	            if (bestSolution[t][n] == 1) {
+	                nodeIdx = n;
+	                break;
+	            }
+	        }
+
+	        if (nodeIdx >= 0) {
+	            FogDevice targetDevice = computeNodes.get(nodeIdx);
+
+	            tuple.setDestModuleName(targetDevice.getName());
+	            
+	            tuple.setUserId(-1);
+
+	            sendNow(targetDevice.getId(), FogEvents.TUPLE_ARRIVAL, tuple);
+	        }
+	    }
 	 System.out.println("\n=== MOAOA DECISION ===");
 
 	 for (int t = 0; t < numTasks; t++) {
@@ -279,6 +311,7 @@ public class Controller extends SimEntity{
 	            FogDevice targetDevice = computeNodes.get(nodeIdx);
 	            // Send tuple to the chosen device
 	            sendNow(targetDevice.getId(), FogEvents.TUPLE_ARRIVAL, tuple);
+	            return;
 	        }
 	    }
 	    

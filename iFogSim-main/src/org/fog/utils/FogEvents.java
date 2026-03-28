@@ -43,4 +43,5 @@ public enum FogEvents implements CloudSimTags {
     UPDATE_RESOURCE_INFO,
     START_DYNAMIC_CLUSTERING,
 	MOAOA_OPTIMIZE;
+	
 }

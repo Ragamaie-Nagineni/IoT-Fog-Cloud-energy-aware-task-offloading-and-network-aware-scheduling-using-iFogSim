@@ -1,6 +1,7 @@
 package org.fog.test.perfeval;
 
 import java.util.ArrayList;
+
 import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
@@ -35,6 +36,7 @@ import org.fog.utils.FogUtils;
 import org.fog.utils.TimeKeeper;
 import org.fog.utils.distribution.DeterministicDistribution;
 import org.fog.placement.custom.FogOffloadingPlacement;
+import org.fog.utils.FogEvents;
 
 
 public class IndustrialIoTFog {
@@ -92,8 +94,22 @@ public class IndustrialIoTFog {
 			    device.setControllerId(controller.getId());
 			}
 			
+			for (Sensor sensor : sensors) {
+			    sensor.setApp(application);   // ✅ ADD THIS
+			}
+			
 			// Submit application
 			controller.submitApplication(application, placement);
+			
+			for (Sensor sensor : sensors) {
+			    CloudSim.send(
+			        controller.getId(),
+			        sensor.getId(),
+			        0.0,
+			        FogEvents.INITIALIZE_SENSOR.ordinal(),
+			        null
+			    );
+			}
 			
 			TimeKeeper.getInstance().setSimulationStartTime(Calendar.getInstance().getTimeInMillis());
 			
@@ -170,7 +186,13 @@ public class IndustrialIoTFog {
 
 	    sensors.add(tempSensor);
 	    sensors.add(vibSensor);
+	    
+	    tempSensor.setAppId(appId);
+	    vibSensor.setAppId(appId);
 
+	    tempSensor.setTransmitDistribution(new DeterministicDistribution(3));
+	    vibSensor.setTransmitDistribution(new DeterministicDistribution(10));
+	    
 	    return node;
 	}
 
