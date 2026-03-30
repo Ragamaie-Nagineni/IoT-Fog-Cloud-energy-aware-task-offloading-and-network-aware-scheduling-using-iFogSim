@@ -122,6 +122,10 @@ public class Sensor extends SimEntity{
 		case FogEvents.TUPLE_ACK:
 			//transmit(transmitDistribution.getNextValue());
 			break;
+		case FogEvents.INITIALIZE_SENSOR:
+		    transmit();
+		    send(getId(), getTransmitDistribution().getNextValue(), FogEvents.EMIT_TUPLE);
+		    break;
 		case FogEvents.EMIT_TUPLE:
 			transmit();
 			send(getId(), getTransmitDistribution().getNextValue(), FogEvents.EMIT_TUPLE);

@@ -673,37 +673,117 @@ public class FogDevice extends PowerDatacenter {
 
     int numClients = 0;
     
-   /* double computeFitnessLocal(Tuple t) {
+    double computeFitnessLocal(Tuple t) {
         double mips = getHost().getTotalMips();
-        double energy = t.getCloudletLength() * 0.5;
         double delay = t.getCloudletLength() / mips;
-        return energy + delay;
-    }
-    
-    double computeFitnessFog(Tuple t) {
-        double delay = t.getCloudletLength() / 1000; // assume fog MIPS
-        double energy = t.getCloudletLength() * 0.3;
+        double energy = t.getCloudletLength() * 0.6; // local expensive
         return delay + energy;
     }
 
-    double computeFitnessCloud(Tuple t) {
-        double delay = t.getCloudletLength() / 3000; // faster
+    double computeFitnessFog(Tuple t) {
+        double delay = t.getCloudletLength() / 1500.0;
         double network = t.getCloudletFileSize() / getUplinkBandwidth();
-        double energy = t.getCloudletLength() * 0.8;
+        double energy = t.getCloudletLength() * 0.4;
         return delay + energy + network;
-    }*/
+    }
+
+    double computeFitnessCloud(Tuple t) {
+
+        double delay = t.getCloudletLength() / 3000;
+
+        // 🔥 Increase network cost (VERY IMPORTANT)
+        double network = (t.getCloudletFileSize() / getUplinkBandwidth()) * 5;
+
+        // 🔥 Increase energy penalty
+        double energy = t.getCloudletLength() * 1.5;
+
+        return delay + energy + network;
+    }
+ // ===== SEND TO CLOUD =====
+    protected void sendToCloud(Tuple tuple) {
+        FogDevice current = this;
+
+        // climb up hierarchy until cloud
+        while (current.getParentId() != -1) {
+            current = (FogDevice) CloudSim.getEntity(current.getParentId());
+        }
+
+        // now current = cloud
+        send(current.getId(), getUplinkLatency(), FogEvents.TUPLE_ARRIVAL, tuple);
+    }
     
+    /*protected void processTupleArrival(SimEvent ev) {
+
+        Tuple tuple = (Tuple) ev.getData();
+     // If tuple is coming from controller → EXECUTE directly
+        if (ev.getSource() == getControllerId()) {
+            DebugLogger.log("[EXECUTION] " + getName() + " executing tuple");
+            return;
+        }
+      
+     // ===== ADD THIS FULL BLOCK =====
+
+     double localFitness = computeFitnessLocal(tuple);
+     double fogFitness = computeFitnessFog(tuple);
+     double cloudFitness = computeFitnessCloud(tuple);
+     
+        sendNow(getControllerId(), FogEvents.TUPLE_ARRIVAL, tuple);
+
+        // stop further processing here
+        return;
+
+     DebugLogger.log(
+         "[DECISION] Device=" + getName() +
+         " | Local=" + localFitness +
+         " | Fog=" + fogFitness +
+         " | Cloud=" + cloudFitness
+     );
+     
+     
+
+     double min = Math.min(localFitness, Math.min(fogFitness, cloudFitness));
+     sendNow(getControllerId(), FogEvents.TUPLE_ARRIVAL, tuple);
+
+     if (getName().equals("cloud")) {
+    	    DebugLogger.log("[EXECUTE] At CLOUD: " + getName());
+    	    return;
+    	}
+     
+     if (min == localFitness) {
+         DebugLogger.log("[MOAOA] LOCAL execution at " + getName());
+         // continue normal execution
+     }
+     else if (min == fogFitness) {
+         DebugLogger.log("[MOAOA] Offloading to FOG from " + getName());
+         sendUp(tuple);
+         return;
+     }
+     else {
+         DebugLogger.log("[MOAOA] Offloading to CLOUD from " + getName());
+         sendToCloud(tuple);
+         return;
+     }
+     sendUp(tuple);
+     return;
+        
+    }*/
     protected void processTupleArrival(SimEvent ev) {
 
         Tuple tuple = (Tuple) ev.getData();
 
-        // ✅ Send ALL tuples to controller for MOAOA scheduling
+        // ✅ If coming from controller → execute
+        if (ev.getSource() == getControllerId()) {
+            DebugLogger.log("[EXECUTION] " + getName() + " executing tuple");
+            return;
+        }
+
+        // ✅ SET SOURCE DEVICE (VERY IMPORTANT)
+        tuple.setSourceDeviceId(getId());
+
+        // ✅ Send to controller
         sendNow(getControllerId(), FogEvents.TUPLE_ARRIVAL, tuple);
-
-        // STOP further processing in this device
-        
     }
-
+    
     protected void updateTimingsOnReceipt(Tuple tuple) {
         Application app = getApplicationMap().get(tuple.getAppId());
         String srcModule = tuple.getSrcModuleName();
