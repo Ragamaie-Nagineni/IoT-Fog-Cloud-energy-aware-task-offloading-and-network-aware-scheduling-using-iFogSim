@@ -106,7 +106,7 @@ public class IndustrialIoTFog {
 			        controller.getId(),
 			        sensor.getId(),
 			        0.0,
-			        FogEvents.INITIALIZE_SENSOR.ordinal(),
+			        FogEvents.INITIALIZE_SENSOR,
 			        null
 			    );
 			}
