@@ -16,6 +16,7 @@ import org.fog.entities.Actuator;
 import org.fog.entities.FogDevice;
 import org.fog.entities.Sensor;
 import org.fog.utils.Config;
+import org.fog.utils.DebugLogger;
 import org.fog.utils.FogEvents;
 import org.fog.utils.FogUtils;
 import org.fog.utils.NetworkUsageMonitor;
@@ -109,6 +110,62 @@ public class Controller extends SimEntity{
 	    if (src.startsWith("sensor") && tuple.getUserId() != -1) {
 	        pendingTasks.add(tuple);
 	    }
+	}
+	private void processTupleForDecision(SimEvent ev) {
+
+	    Tuple tuple = (Tuple) ev.getData();
+	    FogDevice srcDevice = (FogDevice) CloudSim.getEntity(tuple.getSourceDeviceId());
+
+	    // ===== COMPUTE FITNESS =====
+	    double local = computeFitnessLocal(tuple, srcDevice);
+	    double fog = computeFitnessFog(tuple);
+	    double cloud = computeFitnessCloud(tuple);
+
+	    DebugLogger.log("[CONTROLLER DECISION] Source=" + srcDevice.getName()
+	        + " | Local=" + local + " | Fog=" + fog + " | Cloud=" + cloud);
+
+	    double min = Math.min(local, Math.min(fog, cloud));
+
+	    if (min == local) {
+	        DebugLogger.log("[CONTROLLER] Execute LOCAL at " + srcDevice.getName());
+	        sendNow(srcDevice.getId(), FogEvents.TUPLE_ARRIVAL, tuple);
+	    }
+	    else if (min == fog) {
+	        DebugLogger.log("[CONTROLLER] Send to FOG");
+	        sendNow(srcDevice.getParentId(), FogEvents.TUPLE_ARRIVAL, tuple);
+	    }
+	    else {
+	        DebugLogger.log("[CONTROLLER] Send to CLOUD");
+
+	        // find cloud
+	        FogDevice cloud1 = null;
+	        for (FogDevice dev : getFogDevices()) {
+	            if (dev.getLevel() == 0) {
+	                cloud1 = dev;
+	                break;
+	            }
+	        }
+
+	        sendNow(cloud1.getId(), FogEvents.TUPLE_ARRIVAL, tuple);
+	    }
+	}
+	private double computeFitnessLocal(Tuple t, FogDevice dev) {
+	    double mips = dev.getHost().getTotalMips();
+	    double delay = t.getCloudletLength() / mips;
+	    double energy = t.getCloudletLength() * 0.6;
+	    return delay + energy;
+	}
+
+	private double computeFitnessFog(Tuple t) {
+	    double delay = t.getCloudletLength() / 1500.0;
+	    double network = t.getCloudletFileSize() / 1000.0;
+	    return delay + network;
+	}
+
+	private double computeFitnessCloud(Tuple t) {
+	    double delay = t.getCloudletLength() / 4000.0;
+	    double network = 2 * (t.getCloudletFileSize() / 1000.0);
+	    return delay + network;
 	}
 	private void runMOAOAAndAssign() {
 		
@@ -322,6 +379,9 @@ public class Controller extends SimEntity{
 	@Override
 	public void processEvent(SimEvent ev) {
 		switch(ev.getTag()){
+		case FogEvents.TUPLE_ARRIVAL:
+		    processTupleForDecision(ev);
+		    break;
 		case FogEvents.APP_SUBMIT:
 			processAppSubmit(ev);
 			break;
@@ -339,9 +399,6 @@ public class Controller extends SimEntity{
 			printNetworkUsageDetails();
 			System.exit(0);
 			break;
-		case FogEvents.TUPLE_ARRIVAL:
-		    processTupleArrival(ev);
-		    break;
 		case FogEvents.MOAOA_OPTIMIZE:
 		    runMOAOAAndAssign();
 		    send(getId(), 5.0, FogEvents.MOAOA_OPTIMIZE); // repeat every 5 seconds
