@@ -98,7 +98,8 @@ public class Controller extends SimEntity{
 			sendNow(dev.getId(), FogEvents.RESOURCE_MGMT);
 		//send(getId(), 1.0, FogEvents.MOAOA_OPTIMIZE);
 		if (!pendingTasks.isEmpty()) {
-		    sendNow(getId(), FogEvents.MOAOA_OPTIMIZE);
+		    //sendNow(getId(), FogEvents.MOAOA_OPTIMIZE);
+			send(getId(), 5.0, FogEvents.MOAOA_OPTIMIZE);
 		}
 	}
 	private void processTupleArrival(SimEvent ev) {

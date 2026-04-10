@@ -682,9 +682,9 @@ public class FogDevice extends PowerDatacenter {
 
     double computeFitnessFog(Tuple t) {
         double delay = t.getCloudletLength() / 1500.0;
-        double network = t.getCloudletFileSize() / getUplinkBandwidth();
+        //double network = t.getCloudletFileSize() / getUplinkBandwidth();
         double energy = t.getCloudletLength() * 0.4;
-        return delay + energy + network;
+        return delay + energy ;
     }
 
     double computeFitnessCloud(Tuple t) {
