@@ -2,8 +2,19 @@ package org.fog.utils;
 
 import org.cloudbus.cloudsim.core.CloudSimTags;
 
+/**
+ * FogEvents — iFogSim event tags.
+ *
+ * This is an enum implementing CloudSimTags so instances can be passed
+ * to SimEntity.send() / sendNow() which require a CloudSimTags argument.
+ *
+ * ev.getTag() returns the ordinal() of the enum value.
+ * All switch statements compare against FogEvents.CONSTANT.ordinal().
+ *
+ * Original iFogSim design — restored correctly.
+ */
 public enum FogEvents implements CloudSimTags {
-	
+
     TUPLE_ARRIVAL,
     LAUNCH_MODULE,
     RELEASE_OPERATOR,
@@ -42,6 +53,5 @@ public enum FogEvents implements CloudSimTags {
     MANAGEMENT_TUPLE_ARRIVAL,
     UPDATE_RESOURCE_INFO,
     START_DYNAMIC_CLUSTERING,
-	MOAOA_OPTIMIZE;
-	
+    MOAOA_OPTIMIZE;
 }
