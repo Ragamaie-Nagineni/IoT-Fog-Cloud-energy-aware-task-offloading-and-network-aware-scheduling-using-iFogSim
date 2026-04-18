@@ -71,7 +71,7 @@ public class IndustrialIoTFog {
         Log.disable();
 
         // ── STEP 1 : Initialise simulation ────────────────────────────────────
-        DebugLogger.section("EVALUATION 2 — MOAOA Task Offloading in IoT-Fog-Cloud");
+        DebugLogger.section(" MOAOA Task Offloading in IoT-Fog-Cloud");
         DebugLogger.step(1, "Initialising CloudSim simulation environment...");
 
         try {
