@@ -1,9 +1,9 @@
 # Energy- and Network-Aware Task Offloading and Scheduling in IoT–Fog–Cloud Environments
 
--**Student:** Nagineni Ragamaie
--**Roll No:** S20230010158
--**Guide:** Dr. Neha Agrawal
--**Institution:** Indian Institute of Information Technology, Sricity
+- **Student:** Nagineni Ragamaie  
+- **Roll No:** S20230010158  
+- **Guide:** Dr. Neha Agrawal  
+- **Institution:** Indian Institute of Information Technology, Sricity  
 
 ---
 
@@ -216,7 +216,7 @@ Based on reference papers, the optimized MoAOA is expected to outperform baselin
 
 ## 👩‍💻 Author
 
-**Nagineni Ragamaie**
-S20230010158
-Indian Institute of Information Technology, Sricity
-Under guidance of Dr. Neha Agrawal
+- **Nagineni Ragamaie**
+- S20230010158
+- Indian Institute of Information Technology, Sricity
+- Under guidance of Dr. Neha Agrawal
