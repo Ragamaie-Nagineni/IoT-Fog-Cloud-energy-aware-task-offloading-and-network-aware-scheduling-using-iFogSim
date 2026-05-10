@@ -1,9 +1,9 @@
 # Energy- and Network-Aware Task Offloading and Scheduling in IoT–Fog–Cloud Environments
 
-**Student:** Nagineni Ragamaie
-**Roll No:** S20230010158
-**Guide:** Dr. Neha Agrawal
-**Institution:** Indian Institute of Information Technology, Sricity
+-**Student:** Nagineni Ragamaie
+-**Roll No:** S20230010158
+-**Guide:** Dr. Neha Agrawal
+-**Institution:** Indian Institute of Information Technology, Sricity
 
 ---
 
@@ -104,14 +104,33 @@ iFogSim-main/
 4. **Add JAR files** to build path (if not already added):
    - Right click project → Build Path → Add External JARs
    - Select all JARs from `/jars` folder
-5. **Run Baseline first:**
-   - Open `CloudOnlyBaseline.java`
-   - Right click → Run As → Java Application
-   - Note down the baseline results
-6. **Run MoAOA simulation:**
+5. **Run the simulation:**
    - Open `IndustrialIoTFog.java`
    - Right click → Run As → Java Application
-   - Compare results with baseline
+   - This single file runs the entire simulation including:
+     - IoT device and sensor setup
+     - Fog and Cloud topology creation
+     - MoAOA task offloading and scheduling
+     - Result collection and logging
+
+> **Note:** `CloudOnlyBaseline.java` is available separately for reference
+> to compare cloud-only results against MoAOA optimized results,
+> but is **not required** to run the main simulation.
+
+### How the Simulation Works Internally:
+```
+IndustrialIoTFog.java (Entry Point)
+    → Creates topology (Cloud, Fog, Edge devices)
+    → Creates sensors (TEMP every 3s, VIB every 10s)
+    → FogOffloadingPlacement.java (Initial module placement)
+        → data_preprocessor → Edge (Level 3)
+        → analytics, cloud_storage → Cloud (Level 0)
+    → Controller.java (MoAOA runs here dynamically)
+        → Receives tasks from sensors
+        → Decides: Fog or Cloud?
+        → Schedules tasks by priority
+    → Results logged to simulation_output.txt
+```
 
 ---
 
