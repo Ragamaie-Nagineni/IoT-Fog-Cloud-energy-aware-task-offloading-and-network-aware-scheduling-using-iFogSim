@@ -2088,7 +2088,7 @@
   (No completed loops)
   ───────────────────────────────────────────────────
     Network (bits/s)                  : 0.0000
-    Wall clock                        : 1752 ms
+    Wall clock                        : 3765 ms
 
 ═══════════════════════════════════════════════════════
   END OF MoAOA EVALUATION
