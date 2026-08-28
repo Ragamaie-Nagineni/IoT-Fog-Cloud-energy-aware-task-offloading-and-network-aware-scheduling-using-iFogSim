@@ -39,42 +39,57 @@ public class FogOffloadingPlacement extends ModulePlacementEdgewards {
     @Override
     public void mapModules() {
         DebugLogger.separator();
-        DebugLogger.log("  Initial Module Placement (iFogSim wiring):");
+        DebugLogger.log("  Initial Module Placement (Vehicular wiring):");
         DebugLogger.separator();
 
-        Application     app     = getApplication();
+        Application app = getApplication();
         List<FogDevice> devices = getFogDevices();
 
         for (AppModule module : app.getModules()) {
             String name = module.getName();
 
-            if (name.equals("data_preprocessor")) {
-                // Place on all edge sensor-nodes (level 3) — one per node
-                // Matches paper: delay-sensitive tasks → fog/edge (Table 3, line 9-13)
+            if (name.equals("safety_processor") 
+                || name.equals("data_preprocessor")) {
+                // Level 3 — vehicle/edge
                 for (FogDevice dev : devices) {
                     if (dev.getLevel() == 3) {
-                        moduleMapping.addModuleToDevice(name, dev.getName());
+                        moduleMapping.addModuleToDevice(
+                            name, dev.getName());
                         DebugLogger.log(String.format(
-                                "  %-22s  →  %-22s  [Level 3 — Edge]",
-                                name, dev.getName()));
+                            "  %-22s → %-22s [Level 3 — Vehicle]",
+                            name, dev.getName()));
                     }
                 }
+
+            } else if (name.equals("traffic_processor")) {
+                // Level 2 — RSU/MEC
+                for (FogDevice dev : devices) {
+                    if (dev.getLevel() == 2) {
+                        moduleMapping.addModuleToDevice(
+                            name, dev.getName());
+                        DebugLogger.log(String.format(
+                            "  %-22s → %-22s [Level 2 — RSU]",
+                            name, dev.getName()));
+                    }
+                }
+
             } else {
-                // analytics, cloud_storage → cloud (level 0)
-                // Matches paper: compute-intensive tasks → cloud (Table 3, line 17-24)
+                // Level 0 — Cloud
                 for (FogDevice dev : devices) {
                     if (dev.getLevel() == 0) {
-                        moduleMapping.addModuleToDevice(name, dev.getName());
+                        moduleMapping.addModuleToDevice(
+                            name, dev.getName());
                         DebugLogger.log(String.format(
-                                "  %-22s  →  %-22s  [Level 0 — Cloud]",
-                                name, dev.getName()));
+                            "  %-22s → %-22s [Level 0 — Cloud]",
+                            name, dev.getName()));
                     }
                 }
             }
         }
 
         DebugLogger.separator();
-        super.mapModules(); // complete iFogSim internal wiring
-        DebugLogger.info("PLACEMENT", "Initial module placement complete");
+        super.mapModules();
+        DebugLogger.info("PLACEMENT", "Module placement complete");
     }
+        
 }

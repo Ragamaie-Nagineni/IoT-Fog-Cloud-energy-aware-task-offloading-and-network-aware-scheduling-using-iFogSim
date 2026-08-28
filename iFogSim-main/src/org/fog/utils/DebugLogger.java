@@ -1,23 +1,65 @@
 package org.fog.utils;
 
-import java.io.FileWriter;
-import java.io.PrintWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 
 /**
- * DebugLogger - Structured console + file logger for iFogSim simulation.
- * Produces clean, readable step-by-step output for evaluation.
+ * DebugLogger — Structured console + file logger for iFogSim simulation.
+ *
+ * FIX (Eval 3):
+ *   Previous version used Unicode box-drawing characters (═, ─, ┌) which
+ *   crash on Windows with the default cp1252 console encoding.
+ *
+ *   This version:
+ *     1. Opens the log file with explicit UTF-8 encoding.
+ *     2. Redirects System.out to UTF-8 so the console also accepts the chars.
+ *     3. Provides a USE_ASCII flag — set to true if your terminal still shows
+ *        garbled characters, and plain = / - lines will be used instead.
  */
 public class DebugLogger {
 
+    // ─── Configuration ─────────────────────────────────────────────────────────
+    private static final String LOG_FILE  = "simulation_output.txt";
+
+    /**
+     * Set to true to use plain ASCII separators (= and -)
+     * instead of Unicode box-drawing characters.
+     * Useful if your Windows terminal doesn't support UTF-8.
+     */
+    private static final boolean USE_ASCII = false;
+
+    // ─── Separator strings ─────────────────────────────────────────────────────
+    private static final String SEP_THICK = USE_ASCII
+            ? "======================================================="
+            : "\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550";
+
+    private static final String SEP_THIN  = USE_ASCII
+            ? "  -------------------------------------------------------"
+            : "  \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500";
+
+    // ─── Internals ─────────────────────────────────────────────────────────────
     private static PrintWriter writer;
-    private static final String LOG_FILE = "simulation_output.txt";
 
     static {
+        // Redirect System.out to UTF-8 so console handles box-drawing chars
         try {
-            writer = new PrintWriter(new FileWriter(LOG_FILE, false)); // overwrite each run
+            System.setOut(new PrintStream(System.out, true, "UTF-8"));
+        } catch (Exception e) {
+            // If this fails, console output may have garbled chars — non-fatal
+        }
+
+        // Open log file with explicit UTF-8 encoding (fixes Windows cp1252 crash)
+        try {
+            writer = new PrintWriter(
+                    new OutputStreamWriter(
+                            new FileOutputStream(LOG_FILE, false),
+                            StandardCharsets.UTF_8));
         } catch (IOException e) {
-            System.err.println("[DebugLogger] Could not open log file: " + e.getMessage());
+            System.err.println("[DebugLogger] Cannot open log file: " + e.getMessage());
         }
     }
 
@@ -34,19 +76,22 @@ public class DebugLogger {
     // ─── Section headers ───────────────────────────────────────────────────────
 
     public static void section(String title) {
-        String line = "═══════════════════════════════════════════════════════";
         log("");
-        log(line);
+        log(SEP_THICK);
         log("  " + title);
-        log(line);
+        log(SEP_THICK);
     }
 
     public static void subSection(String title) {
-        log("  ┌─ " + title + " ─┐");
+        if (USE_ASCII) {
+            log("  +-- " + title + " --+");
+        } else {
+            log("  \u250C\u2500 " + title + " \u2500\u2510");
+        }
     }
 
     public static void separator() {
-        log("  ───────────────────────────────────────────────────");
+        log(SEP_THIN);
     }
 
     // ─── Typed log helpers ─────────────────────────────────────────────────────
@@ -70,9 +115,9 @@ public class DebugLogger {
     }
 
     public static void iterLog(int iter, double moa, double mop, double bestFit) {
-        // Only print every 10 iterations to keep output clean
+        // Only print every 10 iterations to keep output concise
         if (iter % 10 == 0 || iter == 1) {
-            log(String.format("  Iter %3d | MOA=%.3f | MOP=%.3f | BestFitness=%.4f",
+            log(String.format("  Iter %3d | MOA=%.3f | MOP=%.3f | BestFit=%.4f",
                     iter, moa, mop, bestFit));
         }
     }

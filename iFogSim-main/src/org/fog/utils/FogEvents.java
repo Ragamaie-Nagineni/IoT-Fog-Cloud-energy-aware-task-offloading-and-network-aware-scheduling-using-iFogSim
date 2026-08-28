@@ -1,17 +1,19 @@
 package org.fog.utils;
 
 import org.cloudbus.cloudsim.core.CloudSimTags;
+import org.cloudbus.cloudsim.core.SimEvent;
 
 /**
  * FogEvents — iFogSim event tags.
  *
- * This is an enum implementing CloudSimTags so instances can be passed
- * to SimEntity.send() / sendNow() which require a CloudSimTags argument.
+ * Enum implementing CloudSimTags so instances can be passed to
+ * SimEntity.send() / sendNow() which accept a CloudSimTags argument.
  *
- * ev.getTag() returns the ordinal() of the enum value.
- * All switch statements compare against FogEvents.CONSTANT.ordinal().
- *
- * Original iFogSim design — restored correctly.
+ * HOW TAG RESOLUTION WORKS:
+ *   CloudSim stores the tag as-is when you pass a CloudSimTags object.
+ *   SimEvent.getTag() returns it back.
+ *   In processEvent(), use FogEvents.fromTag(ev) instead of a raw cast
+ *   so the code is safe regardless of CloudSim version.
  */
 public enum FogEvents implements CloudSimTags {
 
@@ -54,5 +56,57 @@ public enum FogEvents implements CloudSimTags {
     UPDATE_RESOURCE_INFO,
     START_DYNAMIC_CLUSTERING,
     MOAOA_OPTIMIZE,
-	MOAOA_DYNAMIC  ;
+    MOAOA_DYNAMIC;
+
+    // ─── Safe tag resolution ───────────────────────────────────────────────────
+
+    /**
+     * Safely resolves a CloudSim SimEvent to a FogEvents constant.
+     *
+     * Handles two CloudSim variants:
+     *   (a) getTag() returns the CloudSimTags Object directly
+     *       → direct cast works.
+     *   (b) getTag() returns int (ordinal)
+     *       → look up via values()[ordinal].
+     *
+     * Returns null for unknown / out-of-range tags — callers should check
+     * for null and fall through to a default handler.
+     *
+     * USAGE:
+     *   FogEvents tag = FogEvents.fromTag(ev);
+     *   if (tag == null) return;
+     *   switch (tag) { ... }
+     */
+    public static FogEvents fromTag(SimEvent ev) {
+        try {
+            // Attempt direct cast first (works when CloudSim stores Object tag)
+            Object raw = ev.getTag();
+            if (raw instanceof FogEvents) return (FogEvents) raw;
+        } catch (Exception ignored) {
+            // getTag() may return primitive int in some CloudSim versions;
+            // fall through to ordinal lookup below.
+        }
+
+        // Ordinal-based fallback (standard CloudSim 3.x / 4.x returns int)
+        try {
+            int ordinal = ev.getTag();
+            FogEvents[] vals = values();
+            if (ordinal >= 0 && ordinal < vals.length) return vals[ordinal];
+        } catch (Exception ignored) { /* nothing */ }
+
+        return null; // unrecognised tag
+    }
+
+    /**
+     * Convert an int ordinal to a FogEvents constant.
+     * Useful when you already have the tag as a plain int.
+     *
+     * @param ordinal  the int returned by SimEvent.getTag()
+     * @return the FogEvents constant, or null if out of range
+     */
+    public static FogEvents fromOrdinal(int ordinal) {
+        FogEvents[] vals = values();
+        if (ordinal >= 0 && ordinal < vals.length) return vals[ordinal];
+        return null;
+    }
 }

@@ -183,8 +183,9 @@ public class Controller extends SimEntity {
         send(getId(), Config.RESOURCE_MANAGE_INTERVAL,
                 FogEvents.CONTROLLER_RESOURCE_MANAGE, null);
         // ── STEP 3: Schedule simulation stop ──────────────────────────────
-        send(getId(), Config.MAX_SIMULATION_TIME,
-                FogEvents.STOP_SIMULATION, null);
+        /*send(getId(), Config.MAX_SIMULATION_TIME,
+                FogEvents.STOP_SIMULATION, null);*/
+        send(getId(), 100.0, FogEvents.STOP_SIMULATION, null);
         // ── STEP 4: Trigger resource management on all fog devices ────────
         for (FogDevice dev : fogDevices)
             sendNow(dev.getId(), FogEvents.RESOURCE_MGMT);
@@ -192,7 +193,8 @@ public class Controller extends SimEntity {
         // ── STEP 5: Schedule Scenario [2] — MoAOA Static at t=5s ─────────
         send(getId(), 5.0, FogEvents.MOAOA_OPTIMIZE, null);
         // ── STEP 6: Schedule Scenario [3] — MoAOA Dynamic at midpoint ─────
-        send(getId(), Config.MAX_SIMULATION_TIME / 2.0, FogEvents.MOAOA_DYNAMIC, null);
+        /*send(getId(), Config.MAX_SIMULATION_TIME / 2.0, FogEvents.MOAOA_DYNAMIC, null);*/
+        send(getId(), 50.0, FogEvents.MOAOA_DYNAMIC, null);
     }
 
     @Override
@@ -328,7 +330,7 @@ public class Controller extends SimEntity {
         // ── STEP A: Compute task counts ────────────────────────────────────
         // base = tasks seen so far (from Static rounds)
         // burst = 1.5x extra tasks simulating a sudden traffic spike
-        int base     = Math.max(1, totalTasksReceived);
+        int base     = Math.max(100, totalTasksReceived);
         int burst    = (int) Math.ceil(base * DYN_OVERLOAD);
         int numTasks = base + burst;   // total dynamic tasks = base + 1.5x burst
         dynTasksReceived = numTasks;
