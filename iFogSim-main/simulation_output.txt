@@ -450,53 +450,53 @@
 ═══════════════════════════════════════════════════════
   MoAOA-Dynamic  (t=50.0s)
 ═══════════════════════════════════════════════════════
-  100 base + 150 burst = 250 total tasks
-  EDGE=74  FOG=0  CLOUD=176  |  Delay=28046.7236  Energy=18305.6888  Overload=no
+  100 base (vehicular) + 150 burst (rush-hour) = 250 total tasks
+  VEHICLE=5  RSU=100  CLOUD=145  |  Delay=14172.9965  Energy=15886.5380  Overload=no
 
 ═══════════════════════════════════════════════════════
   MoAOA-Static  (t=55.0s, tasks=69)
 ═══════════════════════════════════════════════════════
-  EDGE=69  FOG=0  CLOUD=0  |  Delay=189.6857  Energy=1269.0885
+  VEHICLE=0  RSU=69  CLOUD=0  |  Delay=174.2571  Energy=1266.9190
 
 ═══════════════════════════════════════════════════════
   MoAOA-Static  (t=60.0s, tasks=158)
 ═══════════════════════════════════════════════════════
-  EDGE=159  FOG=0  CLOUD=68  |  Delay=1454.2950  Energy=9475.0731
+  VEHICLE=0  RSU=227  CLOUD=0  |  Delay=844.0950  Energy=4168.5145
 
 ═══════════════════════════════════════════════════════
   MoAOA-Static  (t=65.0s, tasks=269)
 ═══════════════════════════════════════════════════════
-  EDGE=261  FOG=0  CLOUD=235  |  Delay=7755.3453  Energy=27430.2028
+  VEHICLE=8  RSU=427  CLOUD=61  |  Delay=3049.3739  Energy=13861.6610
 
 ═══════════════════════════════════════════════════════
   MoAOA-Static  (t=70.0s, tasks=227)
 ═══════════════════════════════════════════════════════
-  EDGE=367  FOG=0  CLOUD=356  |  Delay=9935.2975  Energy=41030.8218
+  VEHICLE=16  RSU=627  CLOUD=80  |  Delay=4046.9832  Energy=19510.4887
 
 ═══════════════════════════════════════════════════════
   MoAOA-Static  (t=75.0s, tasks=200)
 ═══════════════════════════════════════════════════════
-  EDGE=453  FOG=0  CLOUD=470  |  Delay=13916.7478  Energy=53598.2770
+  VEHICLE=20  RSU=785  CLOUD=118  |  Delay=5893.6335  Energy=26144.9636
 
 ═══════════════════════════════════════════════════════
   MoAOA-Static  (t=80.0s, tasks=227)
 ═══════════════════════════════════════════════════════
-  EDGE=555  FOG=0  CLOUD=595  |  Delay=16461.7143  Energy=67508.3715
+  VEHICLE=28  RSU=985  CLOUD=137  |  Delay=6891.2429  Energy=31793.7914
 
 ═══════════════════════════════════════════════════════
   MoAOA-Static  (t=85.0s, tasks=269)
 ═══════════════════════════════════════════════════════
-  EDGE=647  FOG=0  CLOUD=772  |  Delay=21804.6503  Energy=86246.8550
+  VEHICLE=36  RSU=1185  CLOUD=198  |  Delay=9096.5217  Energy=41486.9378
 
 ═══════════════════════════════════════════════════════
   MoAOA-Static  (t=90.0s, tasks=158)
 ═══════════════════════════════════════════════════════
-  EDGE=737  FOG=0  CLOUD=840  |  Delay=23069.2596  Energy=94452.8396
+  VEHICLE=36  RSU=1343  CLOUD=198  |  Delay=9766.3596  Energy=44388.5334
 
 ═══════════════════════════════════════════════════════
   MoAOA-Static  (t=95.0s, tasks=269)
 ═══════════════════════════════════════════════════════
-  EDGE=839  FOG=0  CLOUD=1007  |  Delay=29370.3099  Energy=112407.9693
+  VEHICLE=44  RSU=1543  CLOUD=259  |  Delay=11971.6385  Energy=54081.6798
 
 ═══════════════════════════════════════════════════════
   Per-Device Energy & Cost
@@ -723,16 +723,16 @@
   Metric                            [1] Cloud-Only    [2] MoAOA-Static  [3] MoAOA-Dynamic
   ─────────────────────────────────────────────────────
   Total Tasks                       2073              2073              250             
-  Task Compute Energy (J)           199541.06         112407.97         18305.69        
-    vs Cloud-Only                   baseline          ↓ 43.7           %  ↓ 23.9           %
-  Total Delay (ms)                  45910.5121        29370.3099        28046.7236      
-    vs Cloud-Only                   baseline          ↓ 36.0           %  ↑ 0.0            %
-  Avg Energy/Task (J)               96.2571           54.2248           73.2228         
-  Avg Delay/Task (ms)               22.1469           14.1680           112.1869        
+  Task Compute Energy (J)           199541.06         54081.68          15886.54        
+    vs Cloud-Only                   baseline          ↓ 72.9           %  ↓ 34.0           %
+  Total Delay (ms)                  45910.5121        11971.6385        14172.9965      
+    vs Cloud-Only                   baseline          ↓ 73.9           %  ↑ 0.0            %
+  Avg Energy/Task (J)               96.2571           26.0886           63.5462         
+  Avg Delay/Task (ms)               22.1469           5.7750            56.6920         
   ─────────────────────────────────────────────────────
-  Tasks → EDGE                      0 (all cloud)     839               74              
-  Tasks → FOG                       0 (all cloud)     0                 0               
-  Tasks → CLOUD                     2073              1007              176             
+  Tasks → VEHICLE                   0 (all cloud)     44                5               
+  Tasks → RSU                       0 (all cloud)     1543              100             
+  Tasks → CLOUD                     2073              259               145             
   Overloaded Rounds                 N/A               0                 0 / 1           
   ─────────────────────────────────────────────────────
 
@@ -745,9 +745,9 @@
     Priority scheduling puts delay-sensitive tasks on edge first (EDF)
 
   MoAOA-Dynamic has HIGHER energy AND delay than Static because:
-    (a) Burst load: 1.5x more tasks → more total computations
-    (b) Halved fog/edge capacity → overflow burst tasks to cloud
-    (c) Burst tasks are heavy (2000-2800 MI, large data[]):
+    (a) Rush-hour burst: 1.5x more SAFETY/TRAFFIC/INFO tasks
+    (b) Halved RSU/vehicle capacity → burst overflow to cloud
+    (c) Burst TRAFFIC/INFO tasks are heavier (700-2700 MI, large data):
         → Large data × c2=0.05 → very high D_CS (Eq. 8)
         → Cloud VM cost E_CS ≈ 78.4 J >> E_FD ≈ 0.5 J (Eq.12 vs 13)
     The SAME MoAOA algorithm is applied — degradation is from
@@ -772,8 +772,8 @@
     Fitness                           : W*ΠDelay + (1-W)*Energy  (Eq. 3)
     Position upd                      : Eq.17 (÷,×) and Eq.19 (+,−)
     Archive mgmt                      : Crowding distance  (Eq. 16)
-    Static cap                        : Edge=2 Fog=6 Cloud=∞
-    Dynamic cap                       : Edge=1 Fog=3 Cloud=∞ (halved)
+    Static cap                        : Vehicle=2 RSU=40 Cloud=∞
+    Dynamic cap                       : Vehicle=1 RSU=20 Cloud=∞ (halved)
 
 ═══════════════════════════════════════════════════════
   Application Loop Latencies
@@ -781,7 +781,7 @@
   (No completed loops)
   ─────────────────────────────────────────────────────
     Network (bits/s)                  : 0.0000
-    Wall clock                        : 510 ms
+    Wall clock                        : 616 ms
 
 ═══════════════════════════════════════════════════════
   END OF MoAOA EVALUATION

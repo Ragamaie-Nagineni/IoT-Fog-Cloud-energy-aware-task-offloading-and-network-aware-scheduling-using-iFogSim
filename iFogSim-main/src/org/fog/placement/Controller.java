@@ -94,16 +94,20 @@ public class Controller extends SimEntity {
     private List<Double> taskDeadlines = new ArrayList<>();
 
     // ─── Scenario [2] — MoAOA Static tracking ─────────────────────────────
-    private int    moaoaEdgeCount   = 0;
-    private int    moaoaFogCount    = 0;
+ // ─── Scenario [2] — MoAOA Static tracking ─────────────────────────────
+    private int    moaoaEdgeCount   = 0;  // level 3 — vehicle
+    private int    moaoaRsuCount    = 0;  // level 2 — RSU  (NEW)
+    private int    moaoaFogCount    = 0;  // level 1 — fog proxy (legacy)
     private int    moaoaCloudCount  = 0;
     private double moaoaTotalDelay  = 0;
     private double moaoaTotalEnergy = 0;
     private int    totalTasksReceived = 0;
 
     // ─── Scenario [3] — MoAOA Dynamic tracking ────────────────────────────
-    private int    dynEdgeCount    = 0;
-    private int    dynFogCount     = 0;
+ // ─── Scenario [3] — MoAOA Dynamic tracking ────────────────────────────
+    private int    dynEdgeCount    = 0;  // level 3 — vehicle
+    private int    dynRsuCount     = 0;  // level 2 — RSU  (NEW)
+    private int    dynFogCount     = 0;  // level 1 — fog proxy (legacy)
     private int    dynCloudCount   = 0;
     private double dynTotalDelay   = 0;
     private double dynTotalEnergy  = 0;
@@ -144,8 +148,11 @@ public class Controller extends SimEntity {
     private static final double GAMMA_VM   = 1.0;       // γk: ON-state factor
 
     // ─── Tier capacity limits (STATIC scenario) ────────────────────────────
-    private static final int EDGE_CAP = 2;
-    private static final int FOG_CAP  = 6;
+ // ─── Tier capacity limits (STATIC scenario) ────────────────────────────
+    private static final int VEHICLE_CAP = 2;   // per vehicle node  (level 3)
+    private static final int RSU_CAP     = 40;  // per RSU           (level 2): 5 RSUs × 40 = 200 total
+    private static final int FOG_CAP     = 6;   // legacy fog proxy  (level 1) — not used in vehicular
+    private static final int EDGE_CAP    = VEHICLE_CAP; // backward compat alias
 
     // ─── Dynamic scenario constants ────────────────────────────────────────
     // DYN_OVERLOAD: burst multiplier — dynamic scenario has 1.5x more tasks
@@ -231,7 +238,15 @@ public class Controller extends SimEntity {
         if (t.getUserId() != -1) {
             pendingTasks.add(t);
             // TEMP = delay-sensitive (short deadline), VIB = compute-intensive
-            taskDeadlines.add(t.getTupleType().equals("TEMP") ? 5.0 : 15.0);
+            double dl;
+            switch (t.getTupleType()) {
+                case "SAFETY":       dl = 10.0;   break;  // 10ms — safety critical
+                case "TRAFFIC":      dl = 100.0;  break;  // 100ms — traffic management
+                case "INFOTAINMENT": dl = 1000.0; break;  // 1000ms — relaxed
+                case "TEMP":         dl = 5.0;    break;  // Eval 2 backward compat
+                default:             dl = 15.0;   break;
+            }
+            taskDeadlines.add(dl);
             totalTasksReceived++;
         }
     }
@@ -259,7 +274,10 @@ public class Controller extends SimEntity {
             len[t]  = pendingTasks.get(t).getCloudletLength();
             data[t] = pendingTasks.get(t).getCloudletFileSize();
             dl[t]   = taskDeadlines.get(t);
-            ds[t]   = pendingTasks.get(t).getTupleType().equals("TEMP");
+            String type = pendingTasks.get(t).getTupleType();
+            ds[t] = type.equals("SAFETY") || type.equals("TEMP");
+            // SAFETY = delay-sensitive (10ms deadline) → prefer vehicle
+            // TRAFFIC/INFO → compute-intensive → RSU or cloud
         }
 
         // ── STEP B: Sort tasks by deadline (EDF — Earliest Deadline First) ─
@@ -284,7 +302,8 @@ public class Controller extends SimEntity {
 
             if      (lv == 0) moaoaCloudCount++;
             else if (lv == 1) moaoaFogCount++;
-            else              moaoaEdgeCount++;
+            else if (lv == 2) moaoaRsuCount++;   // RSU — NEW
+            else              moaoaEdgeCount++;  // vehicle (level 3)
 
             Tuple tuple = pendingTasks.get(idx);
             if (tuple.getDestModuleName() == null) {
@@ -295,10 +314,9 @@ public class Controller extends SimEntity {
         }
 
         DebugLogger.log(String.format(
-                "  EDGE=%d  FOG=%d  CLOUD=%d  |  Delay=%.4f  Energy=%.4f",
-                moaoaEdgeCount, moaoaFogCount, moaoaCloudCount,
+                "  VEHICLE=%d  RSU=%d  CLOUD=%d  |  Delay=%.4f  Energy=%.4f",
+                moaoaEdgeCount, moaoaRsuCount, moaoaCloudCount,
                 moaoaTotalDelay, moaoaTotalEnergy));
-
         pendingTasks.clear();
         taskDeadlines.clear();
     }
@@ -330,41 +348,77 @@ public class Controller extends SimEntity {
         // ── STEP A: Compute task counts ────────────────────────────────────
         // base = tasks seen so far (from Static rounds)
         // burst = 1.5x extra tasks simulating a sudden traffic spike
-        int base     = Math.max(100, totalTasksReceived);
-        int burst    = (int) Math.ceil(base * DYN_OVERLOAD);
-        int numTasks = base + burst;   // total dynamic tasks = base + 1.5x burst
-        dynTasksReceived = numTasks;
-        int numNodes = fogDevices.size();
+     // ── STEP A: Compute task counts ────────────────────────────────────────
+     // base = actual vehicular tasks accumulated so far
+     // burst = 1.5x extra (rush-hour: more vehicles, congestion)
+     int base     = Math.max(100, totalTasksReceived);
+     int burst    = (int) Math.ceil(base * DYN_OVERLOAD);
+     int numTasks = base + burst;
+     dynTasksReceived = numTasks;
+     int numNodes = fogDevices.size();
 
-        DebugLogger.log(String.format("  %d base + %d burst = %d total tasks", base, burst, numTasks));
+     DebugLogger.log(String.format(
+         "  %d base (vehicular) + %d burst (rush-hour) = %d total tasks",
+         base, burst, numTasks));
 
-        // ── STEP B: Build task arrays ──────────────────────────────────────
-        // Base tasks mirror the static distribution (mix of TEMP and VIB)
-        // Burst tasks are compute-heavy (large len, large data) → high workload
-        // High workload on fog: E_FD = α*ϖ² + β*ϖ + ∂  grows quadratically
-        // Overflow to cloud: E_CS = γ*(Q*(ak*Mk+Ck)) is a fixed high cost
-        double[] len  = new double[numTasks];
-        double[] data = new double[numTasks];
-        double[] dl   = new double[numTasks];
-        boolean[] ds  = new boolean[numTasks];
+     // ── STEP B: Build vehicular task arrays ───────────────────────────────
+     // Distribution mirrors real dataset: ~33% SAFETY, ~43% TRAFFIC, ~20% INFO
+     // Base tasks = normal vehicular load (same types as Static scenario)
+     // Burst tasks = rush-hour (heavier TRAFFIC + INFOTAINMENT, more data)
+     // Halved RSU/vehicle capacity → overflow forces tasks to cloud
+     double[] len  = new double[numTasks];
+     double[] data = new double[numTasks];
+     double[] dl   = new double[numTasks];
+     boolean[] ds  = new boolean[numTasks];
 
-        // Base tasks (same distribution as static)
-        for (int t = 0; t < base; t++) {
-            len[t]  = (t % 3 == 0) ? 300.0 : 500.0;
-            data[t] = len[t];
-            dl[t]   = (t % 3 == 0) ? 5.0 : 15.0;
-            ds[t]   = (t % 3 == 0);
-        }
-        // Burst tasks: HEAVY compute load — these MUST overflow to cloud because
-        // edge/fog capacity is halved and these are NOT delay-sensitive (ds=false)
-        // so MoAOA will NOT prioritise placing them on edge/fog
-        for (int t = base; t < numTasks; t++) {
-            len[t]  = 2000.0 + (t % 5) * 200.0; // 2000–2800 MI (much heavier than base)
-            data[t] = len[t] * 1.5;               // large data → large D_CS (Eq.8)
-            dl[t]   = 100.0;                       // relaxed deadline → not delay-sensitive
-            ds[t]   = false;                       // compute-intensive → targets cloud
-        }
+     // Base tasks — vehicular distribution (SAFETY / TRAFFIC / INFOTAINMENT)
+     for (int t = 0; t < base; t++) {
+         int mod = t % 10;
+         if (mod < 3) {
+             // SAFETY (~30%): obstacle detection, emergency alerts — 10ms deadline
+             len[t]  = 200.0 + (t % 3) * 50.0;    // 200–300 MI
+             data[t] = len[t] * 0.8;
+             dl[t]   = 10.0;
+             ds[t]   = true;   // delay-sensitive → prefer vehicle/RSU
+         } else if (mod < 7) {
+             // TRAFFIC (~40%): routing, signal timing — 100ms deadline
+             len[t]  = 400.0 + (t % 5) * 60.0;    // 400–640 MI
+             data[t] = len[t];
+             dl[t]   = 100.0;
+             ds[t]   = false;  // compute-intensive → RSU preferred
+         } else {
+             // INFOTAINMENT (~30%): maps, streaming — 1000ms deadline
+             len[t]  = 800.0 + (t % 7) * 100.0;   // 800–1400 MI
+             data[t] = len[t] * 1.5;
+             dl[t]   = 1000.0;
+             ds[t]   = false;  // relaxed → cloud acceptable
+         }
+     }
 
+     // Burst tasks — rush-hour surge (heavier, more data → cloud overflow)
+     // Halved RSU/vehicle capacity can't absorb burst → higher cloud load
+     for (int t = base; t < numTasks; t++) {
+         int mod = (t - base) % 10;
+         if (mod < 3) {
+             // SAFETY burst: dense traffic, many simultaneous alerts
+             len[t]  = 300.0 + (t % 3) * 50.0;    // slightly heavier than base
+             data[t] = len[t] * 0.8;
+             dl[t]   = 10.0;
+             ds[t]   = true;
+         } else if (mod < 7) {
+             // TRAFFIC burst: congestion data, larger payloads
+             len[t]  = 700.0 + (t % 5) * 100.0;   // 700–1100 MI (heavier)
+             data[t] = len[t] * 1.5;               // large data → high D_CS if overflows
+             dl[t]   = 100.0;
+             ds[t]   = false;
+         } else {
+             // INFOTAINMENT burst: HD map updates, V2X broadcasts
+             len[t]  = 1500.0 + (t % 7) * 200.0;  // 1500–2700 MI
+             data[t] = len[t] * 2.0;               // very large → expensive if cloud
+             dl[t]   = 1000.0;
+             ds[t]   = false;
+         }
+     }
         // ── STEP C: Sort by deadline (EDF priority) ────────────────────────
         Integer[] order = priorityOrder(dl, numTasks);
 
@@ -402,14 +456,15 @@ public class Controller extends SimEntity {
             dynTotalEnergy += computeTotalEnergy(wl, lv);
             if      (lv == 0) dynCloudCount++;
             else if (lv == 1) dynFogCount++;
-            else              dynEdgeCount++;
+            else if (lv == 2) dynRsuCount++;   // RSU — NEW
+            else              dynEdgeCount++;  // vehicle (level 3)
         }
 
         DebugLogger.log(String.format(
-                "  EDGE=%d  FOG=%d  CLOUD=%d  |  Delay=%.4f  Energy=%.4f  Overload=%s",
-                dynEdgeCount, dynFogCount, dynCloudCount,
+                "  VEHICLE=%d  RSU=%d  CLOUD=%d  |  Delay=%.4f  Energy=%.4f  Overload=%s",
+                dynEdgeCount, dynRsuCount, dynCloudCount,
                 dynTotalDelay, dynTotalEnergy, overloaded ? "YES" : "no"));
-    }
+        }
 
     // ══════════════════════════════════════════════════════════════════════
     //  MoAOA CORE ALGORITHM  (Algorithm 4, Table 6 — Ali et al. 2024)
@@ -775,8 +830,9 @@ public class Controller extends SimEntity {
         int[] cap = new int[fogDevices.size()];
         for (int i = 0; i < fogDevices.size(); i++) {
             if      (lvl[i] == 0) cap[i] = Integer.MAX_VALUE; // cloud: unlimited
-            else if (lvl[i] == 1) cap[i] = dyn ? Math.max(1, (int)(FOG_CAP  * DYN_CAP_RATIO)) : FOG_CAP;
-            else                  cap[i] = dyn ? Math.max(1, (int)(EDGE_CAP * DYN_CAP_RATIO)) : EDGE_CAP;
+            else if (lvl[i] == 1) cap[i] = dyn ? Math.max(1, (int)(FOG_CAP     * DYN_CAP_RATIO)) : FOG_CAP;
+            else if (lvl[i] == 2) cap[i] = dyn ? Math.max(1, (int)(RSU_CAP     * DYN_CAP_RATIO)) : RSU_CAP;
+            else                  cap[i] = dyn ? Math.max(1, (int)(VEHICLE_CAP  * DYN_CAP_RATIO)) : VEHICLE_CAP;
         }
         return cap;
     }
@@ -796,7 +852,8 @@ public class Controller extends SimEntity {
 
         // ── Scenario [1] Cloud-Only baseline ─────────────────────────────
         // avg task 433 MI (TEMP/VIB mix); all tasks go to cloud (level=0)
-        double avgLen  = 433.0, avgData = 433.0, cloudMips = 44800.0;
+        double avgLen = 549.0;   // TEMP=300 MI, VIB=500 MI, mix
+        double avgData = 433.0, cloudMips = 44800.0;
         double avgWl   = avgLen / cloudMips;
         double cDelayT = computeTotalDelay(avgLen, avgData, cloudMips, 0, avgWl);
         double cEnerT  = computeTotalEnergy(avgWl, 0);
@@ -852,9 +909,9 @@ public class Controller extends SimEntity {
                 f4(totalTasksReceived > 0 ? moaoaTotalDelay/totalTasksReceived : 0),
                 f4(dynTasksReceived   > 0 ? dynTotalDelay  /dynTasksReceived   : 0));
         DebugLogger.separator();
-        row("Tasks → EDGE",  "0 (all cloud)", s(moaoaEdgeCount),  s(dynEdgeCount));
-        row("Tasks → FOG",   "0 (all cloud)", s(moaoaFogCount),   s(dynFogCount));
-        row("Tasks → CLOUD", s(totalTasksReceived), s(moaoaCloudCount), s(dynCloudCount));
+        row("Tasks → VEHICLE","0 (all cloud)", s(moaoaEdgeCount),  s(dynEdgeCount));
+        row("Tasks → RSU",    "0 (all cloud)", s(moaoaRsuCount),   s(dynRsuCount));
+        row("Tasks → CLOUD",  s(totalTasksReceived), s(moaoaCloudCount), s(dynCloudCount));
         row("Overloaded Rounds", "N/A", "0", dynRoundsFailed + " / 1");
 
         // Interpretation section
@@ -866,9 +923,9 @@ public class Controller extends SimEntity {
         DebugLogger.log("    Priority scheduling puts delay-sensitive tasks on edge first (EDF)");
         DebugLogger.log("");
         DebugLogger.log("  MoAOA-Dynamic has HIGHER energy AND delay than Static because:");
-        DebugLogger.log("    (a) Burst load: 1.5x more tasks → more total computations");
-        DebugLogger.log("    (b) Halved fog/edge capacity → overflow burst tasks to cloud");
-        DebugLogger.log("    (c) Burst tasks are heavy (2000-2800 MI, large data[]):");
+        DebugLogger.log("    (a) Rush-hour burst: 1.5x more SAFETY/TRAFFIC/INFO tasks");
+        DebugLogger.log("    (b) Halved RSU/vehicle capacity → burst overflow to cloud");
+        DebugLogger.log("    (c) Burst TRAFFIC/INFO tasks are heavier (700-2700 MI, large data):");
         DebugLogger.log("        → Large data × c2=0.05 → very high D_CS (Eq. 8)");
         DebugLogger.log("        → Cloud VM cost E_CS ≈ 78.4 J >> E_FD ≈ 0.5 J (Eq.12 vs 13)");
         DebugLogger.log("    The SAME MoAOA algorithm is applied — degradation is from");
@@ -886,9 +943,11 @@ public class Controller extends SimEntity {
         DebugLogger.result("  Fitness",     "W*ΠDelay + (1-W)*Energy  (Eq. 3)");
         DebugLogger.result("  Position upd","Eq.17 (÷,×) and Eq.19 (+,−)");
         DebugLogger.result("  Archive mgmt","Crowding distance  (Eq. 16)");
-        DebugLogger.result("  Static cap",  "Edge=" + EDGE_CAP + " Fog=" + FOG_CAP + " Cloud=∞");
-        DebugLogger.result("  Dynamic cap", "Edge=" + (int)(EDGE_CAP*DYN_CAP_RATIO)
-                + " Fog=" + (int)(FOG_CAP*DYN_CAP_RATIO) + " Cloud=∞ (halved)");
+        DebugLogger.result("  Static cap",
+                "Vehicle=" + VEHICLE_CAP + " RSU=" + RSU_CAP + " Cloud=∞");
+        DebugLogger.result("  Dynamic cap",
+                "Vehicle=" + (int)(VEHICLE_CAP*DYN_CAP_RATIO)
+                + " RSU=" + (int)(RSU_CAP*DYN_CAP_RATIO) + " Cloud=∞ (halved)");
 
         // Application loop latencies
         DebugLogger.section("Application Loop Latencies");
@@ -898,6 +957,7 @@ public class Controller extends SimEntity {
             DebugLogger.result("  " + getStringForLoopId(id),
                     avg != null ? String.format("%.4f ms", avg) : "N/A");
             hasLoops = true;
+            
         }
         if (!hasLoops) DebugLogger.log("  (No completed loops)");
 
