@@ -56,7 +56,13 @@ public enum FogEvents implements CloudSimTags {
     UPDATE_RESOURCE_INFO,
     START_DYNAMIC_CLUSTERING,
     MOAOA_OPTIMIZE,
-    MOAOA_DYNAMIC;
+    MOAOA_DYNAMIC,
+
+    // ── Task 8: Vehicular 5G management events ────────────────────────────
+    VEHICLE_TASK_ARRIVAL,   // periodic SAFETY-task queue summary (V2X priority)
+    RSU_HANDOVER,           // vehicle transitions between RSU coverage zones
+    TPC_UPDATE,             // Transmit Power Control — adapts tx power to RSU load
+    DPS_SCALE;              // Dynamic Placement Scaling — RSU capacity management
 
     // ─── Safe tag resolution ───────────────────────────────────────────────────
 

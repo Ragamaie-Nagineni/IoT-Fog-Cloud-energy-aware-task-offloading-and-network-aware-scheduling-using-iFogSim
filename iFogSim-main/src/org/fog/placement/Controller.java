@@ -112,8 +112,13 @@ public class Controller extends SimEntity {
     private double dynTotalDelay   = 0;
     private double dynTotalEnergy  = 0;
     private int    dynTasksReceived = 0;
-    private int    dynRoundsFailed  = 0;
+    private int dynRoundsFailed = 0;
 
+ // ── Task 8: Vehicular event tracking ─────────────────────────────────
+ private double currentTxPower    = 20.0; // V2X tx power in dBm (TPC-managed)
+ private int    handoverCount     = 0;    // cumulative RSU handovers
+ private int    dpsScaleUpCount   = 0;    // DPS scale-up events
+ private int    dpsScaleDownCount = 0;    // DPS scale-down events
     // ═══════════════════════════════════════════════════════════════════════
     //  MoAOA PARAMETERS — Table 8 of Ali et al. 2024
     // ═══════════════════════════════════════════════════════════════════════
@@ -161,6 +166,18 @@ public class Controller extends SimEntity {
     private static final double DYN_OVERLOAD   = 1.5;
     private static final double DYN_CAP_RATIO  = 0.5; // half the static capacity
 
+ // ═══════════════════════════════════════════════════════════════════════
+ //  4-OBJECTIVE FITNESS WEIGHTS  (Network-Aware vehicular extension)
+ //  W1=delay, W2=compute energy, W3=network energy, W4=failure prob
+ // ═══════════════════════════════════════════════════════════════════════
+ private static final double W1_DELAY   = 0.30;
+ private static final double W2_COMPUTE = 0.30;
+ private static final double W3_NET     = 0.20;
+ private static final double W4_FAIL    = 0.20;
+ // E_net = P_tx(W) × C3_NET × data[t]
+ // P_tx: SAFETY=0.20W(23dBm), TRAFFIC=0.10W(20dBm), INFO=0.05W(17dBm)
+ private static final double C3_NET     = 0.0008;
+
     // ─── Constructor ───────────────────────────────────────────────────────
     public Controller(String name, List<FogDevice> fogDevices,
                       List<Sensor> sensors, List<Actuator> actuators) {
@@ -202,6 +219,12 @@ public class Controller extends SimEntity {
         // ── STEP 6: Schedule Scenario [3] — MoAOA Dynamic at midpoint ─────
         /*send(getId(), Config.MAX_SIMULATION_TIME / 2.0, FogEvents.MOAOA_DYNAMIC, null);*/
         send(getId(), 50.0, FogEvents.MOAOA_DYNAMIC, null);
+
+     // Task 8: schedule vehicular 5G management events
+     send(getId(), 10.0, FogEvents.TPC_UPDATE,          null); // first TPC check
+     send(getId(), 15.0, FogEvents.DPS_SCALE,           null); // first DPS check
+     send(getId(), 20.0, FogEvents.VEHICLE_TASK_ARRIVAL,null); // first V-task summary
+     send(getId(), 30.0, FogEvents.RSU_HANDOVER,        null); // first handover wave
     }
 
     @Override
@@ -222,10 +245,12 @@ public class Controller extends SimEntity {
                 runStaticMoAOA();
                 send(getId(), 5.0, FogEvents.MOAOA_OPTIMIZE, null);
                 break;
-            case MOAOA_DYNAMIC:
-                // Scenario [3]: run dynamic MoAOA once at midpoint
-                runDynamicMoAOA();
-                break;
+            case MOAOA_DYNAMIC:          runDynamicMoAOA();            break;
+         // ── Task 8: vehicular events ──────────────────────────────────────────
+         case VEHICLE_TASK_ARRIVAL:   handleVehicleTaskArrival();   break;
+         case RSU_HANDOVER:           handleRsuHandover();           break;
+         case TPC_UPDATE:             handleTpcUpdate();             break;
+         case DPS_SCALE:              handleDpsScale();              break;
             default: break;
         }
     }
@@ -465,7 +490,110 @@ public class Controller extends SimEntity {
                 dynEdgeCount, dynRsuCount, dynCloudCount,
                 dynTotalDelay, dynTotalEnergy, overloaded ? "YES" : "no"));
         }
+ // ══════════════════════════════════════════════════════════════════════
+//  TASK 8 — VEHICULAR 5G EVENT HANDLERS
+//
+//  Models three real V2X network management mechanisms:
+//    TPC  : Transmit Power Control (3GPP TS 38.213)
+//    DPS  : Dynamic Placement Scaling (RSU load balancing)
+//    HO   : RSU Handover (vehicle mobility between coverage zones)
+//    VTAA : Vehicle Task Arrival summary (SAFETY priority queue)
+// ══════════════════════════════════════════════════════════════════════
 
+/**
+ * VEHICLE_TASK_ARRIVAL — periodic summary of SAFETY tasks in the queue.
+ * SAFETY tasks are delay-sensitive (V2X emergency data) and get
+ * priority scheduling via EDF; this event logs their accumulation rate.
+ */
+private void handleVehicleTaskArrival() {
+    long safetyCount = pendingTasks.stream()
+            .filter(t -> "SAFETY".equals(t.getTupleType())).count();
+    long trafficCount = pendingTasks.stream()
+            .filter(t -> "TRAFFIC".equals(t.getTupleType())).count();
+    long infoCount = pendingTasks.stream()
+            .filter(t -> "INFO".equals(t.getTupleType())).count();
+    DebugLogger.log(String.format(
+            "  [V_TASK_ARR  ] t=%5.1fs  Pending → SAFETY:%-4d TRAFFIC:%-4d INFO:%-4d" +
+            "  (EDF priority active for SAFETY)",
+            CloudSim.clock(), safetyCount, trafficCount, infoCount));
+    if (CloudSim.clock() < 85.0)
+        send(getId(), 20.0, FogEvents.VEHICLE_TASK_ARRIVAL, null);
+}
+
+/**
+ * RSU_HANDOVER — simulates vehicle mobility between RSU coverage zones.
+ * ~5% of vehicles transition per event; fired at t=30s (normal) and
+ * t=70s (rush-hour mobility surge).
+ */
+private void handleRsuHandover() {
+    long numVehicles = fogDevices.stream()
+            .filter(d -> d.getLevel() == 3).count();
+    int movers = (int)(numVehicles * 0.05); // 5% of vehicles hand over
+    handoverCount += movers;
+    DebugLogger.log(String.format(
+            "  [RSU_HANDOVER] t=%5.1fs  %d vehicles transitioning RSU zone" +
+            "  (cumulative: %d handovers)",
+            CloudSim.clock(), movers, handoverCount));
+    // Second handover wave during rush hour
+    if (CloudSim.clock() < 60.0)
+        send(getId(), 70.0, FogEvents.RSU_HANDOVER, null);
+}
+
+/**
+ * TPC_UPDATE — 5G Transmit Power Control (3GPP TS 38.213 §7.1).
+ * Adapts V2X tx power to current RSU load:
+ *   Low load  (< 30%)  : 17 dBm — energy-save mode
+ *   Medium load (30-70%): 20 dBm — nominal operating point
+ *   High load (> 70%)  : 23 dBm — max reliability mode
+ */
+private void handleTpcUpdate() {
+    int numRsu = 5;
+    int tasksPerRsu = moaoaRsuCount / Math.max(1, numRsu);
+    double newPower;
+    String reason;
+    if (tasksPerRsu < (int)(RSU_CAP * 0.30)) {
+        newPower = 17.0; reason = "low load   → energy-save mode";
+    } else if (tasksPerRsu < (int)(RSU_CAP * 0.70)) {
+        newPower = 20.0; reason = "medium load → nominal power";
+    } else {
+        newPower = 23.0; reason = "high load  → max reliability";
+    }
+    currentTxPower = newPower;
+    DebugLogger.log(String.format(
+            "  [TPC_UPDATE  ] t=%5.1fs  RSU tasks/node=%-4d cap=%d" +
+            "  → %.0f dBm  (%s)",
+            CloudSim.clock(), tasksPerRsu, RSU_CAP, newPower, reason));
+    if (CloudSim.clock() < 90.0)
+        send(getId(), 10.0, FogEvents.TPC_UPDATE, null);
+}
+
+/**
+ * DPS_SCALE — Dynamic Placement Scaling (RSU capacity management).
+ * Monitors RSU utilisation and emits a scale signal:
+ *   util > 80% : SCALE-UP  — virtual RSU activation (C-V2X offload)
+ *   util < 30% : SCALE-DOWN — energy-saving mode
+ *   else       : STABLE
+ */
+private void handleDpsScale() {
+    int totalRsuCap = 5 * RSU_CAP;
+    double util = totalRsuCap > 0
+            ? (double) moaoaRsuCount / totalRsuCap : 0.0;
+    String action;
+    if (util > 0.80) {
+        action = "SCALE-UP   → virtual RSU activation (+10% capacity)";
+        dpsScaleUpCount++;
+    } else if (util < 0.30) {
+        action = "SCALE-DOWN → energy-save mode (-10% capacity)";
+        dpsScaleDownCount++;
+    } else {
+        action = "STABLE     → no scaling required";
+    }
+    DebugLogger.log(String.format(
+            "  [DPS_SCALE   ] t=%5.1fs  RSU util=%.1f%%  %s",
+            CloudSim.clock(), util * 100.0, action));
+    if (CloudSim.clock() < 90.0)
+        send(getId(), 15.0, FogEvents.DPS_SCALE, null);
+}
     // ══════════════════════════════════════════════════════════════════════
     //  MoAOA CORE ALGORITHM  (Algorithm 4, Table 6 — Ali et al. 2024)
     //
@@ -497,7 +625,7 @@ public class Controller extends SimEntity {
         double[] fit = new double[POP_SIZE];
         for (int i = 0; i < POP_SIZE; i++) {
             pop[i] = buildOffloadingMatrix(numTasks, numNodes, lvl, cap, ds);
-            fit[i] = fitnessOF(pop[i], numTasks, numNodes, len, data, mips, lvl, cap);
+            fit[i] = fitnessOF(pop[i], numTasks, numNodes, len, data, mips, lvl, cap, ds);
         }
 
         // ── STEP 2: Find initial best solution (Lines 4-7) ─────────────────
@@ -558,7 +686,7 @@ public class Controller extends SimEntity {
                 newSol = enforceConstraints(newSol, numTasks, numNodes, lvl, cap, ds);
 
                 // ── STEP 4e: Greedy update (Lines 27-30) ────────────────
-                double newFit = fitnessOF(newSol, numTasks, numNodes, len, data, mips, lvl, cap);
+                double newFit = fitnessOF(newSol, numTasks, numNodes, len, data, mips, lvl, cap, ds);
                 if (newFit < fit[i]) {
                     pop[i] = newSol;
                     fit[i] = newFit;
@@ -583,31 +711,82 @@ public class Controller extends SimEntity {
     //  Capacity overload adds a quadratic penalty to steer the algorithm
     //  away from infeasible solutions while still respecting the paper model.
     // ══════════════════════════════════════════════════════════════════════
-    private double fitnessOF(int[] sol, int numTasks, int numNodes,
-                              double[] len, double[] data,
-                              double[] mips, int[] lvl, int[] cap) {
-        double delay = 0, energy = 0;
-        int[] cnt = new int[numNodes];
+ // ══════════════════════════════════════════════════════════════════════
+//  FITNESS FUNCTION  (4-Objective, Eq. 3 extended for vehicular 5G)
+//
+//  OF = W1×Delay + W2×ComputeEnergy + W3×NetworkEnergy + W4×FailureProb
+//
+//  Obj 3 — Network Energy (V2X transmission, 5G vehicular):
+//    E_net = P_tx(W) × C3_NET × data[t]
+//    Task type inferred from ds[] + len[]:
+//      ds=true          → SAFETY       (23 dBm = 0.20 W)
+//      ds=false, <700   → TRAFFIC      (20 dBm = 0.10 W)
+//      ds=false, ≥700   → INFOTAINMENT (17 dBm = 0.05 W)
+//
+//  Obj 4 — Failure Probability (signal quality + battery):
+//    P_fail = 0.4×(1-battery/100) + 0.6×sigmoid((−75−signal)/5)
+//    SAFETY: signal=−70dBm, bat=70%; TRAFFIC: −80dBm, 60%; INFO: −90dBm, 50%
+// ══════════════════════════════════════════════════════════════════════
+private double fitnessOF(int[] sol, int numTasks, int numNodes,
+                          double[] len, double[] data,
+                          double[] mips, int[] lvl, int[] cap,
+                          boolean[] ds) {
+    double delay = 0, energy = 0, netEnergy = 0, failProb = 0;
+    int[] cnt = new int[numNodes];
 
-        for (int t = 0; t < numTasks; t++) {
-            int n  = sol[t];
-            double wl = len[t] / mips[n];     // ϖ = workload in time units
-            delay  += computeTotalDelay(len[t], data[t], mips[n], lvl[n], wl);
-            energy += computeTotalEnergy(wl, lvl[n]);
-            cnt[n]++;
+    for (int t = 0; t < numTasks; t++) {
+        int n  = sol[t];
+        double wl = len[t] / mips[n];
+
+        // Obj 1: Delay (Eq. 9)
+        delay  += computeTotalDelay(len[t], data[t], mips[n], lvl[n], wl);
+        // Obj 2: Compute Energy (Eq. 15)
+        energy += computeTotalEnergy(wl, lvl[n]);
+
+        // Infer task type from ds[] and len[] for network objectives
+        double pTx, sigStrength, battery;
+        if (ds[t]) {
+            pTx = 0.20; sigStrength = -70.0; battery = 70.0; // SAFETY
+        } else if (len[t] < 700.0) {
+            pTx = 0.10; sigStrength = -80.0; battery = 60.0; // TRAFFIC
+        } else {
+            pTx = 0.05; sigStrength = -90.0; battery = 50.0; // INFOTAINMENT
         }
 
-        // Capacity overflow penalty: quadratic to strongly penalise infeasibility
-        double penalty = 0;
-        for (int n = 0; n < numNodes; n++)
-            if (cap[n] < Integer.MAX_VALUE && cnt[n] > cap[n]) {
-                int ov = cnt[n] - cap[n];
-                penalty += ov * ov * 500.0;
-            }
+        // Obj 3: Network Energy — E_net = P_tx × C3_NET × data[t]
+        double hops = (lvl[n] == 3) ? 1.0 : (lvl[n] == 2) ? 2.0 : 4.0;
+        netEnergy += pTx * hops * C3_NET * data[t];
 
-        return W_FIT * delay + (1.0 - W_FIT) * energy + penalty; // Eq. 3
+        // Obj 4: Failure Probability
+        double battFail = 1.0 - (battery / 100.0);  // 0=full, 1=empty
+        double sigFail  = 1.0 / (1.0 + Math.exp(-((-75.0 - sigStrength) / 5.0)));
+        failProb += 0.4 * battFail + 0.6 * sigFail;
+
+        cnt[n]++;
     }
 
+    // Normalise per-task for fair weighting across objectives
+    double nt = numTasks > 0 ? numTasks : 1.0;
+    double normDelay  = delay     / nt / 100.0; // scale: ~100ms typical
+    double normEnergy = energy    / nt / 100.0; // scale: ~100J typical
+    double normNet    = netEnergy / nt;          // ~0.01–0.10 range
+    double normFail   = failProb  / nt;          // [0,1] per task
+
+    // Capacity overflow penalty (unchanged)
+    double penalty = 0;
+    for (int i = 0; i < numNodes; i++)
+        if (cap[i] < Integer.MAX_VALUE && cnt[i] > cap[i]) {
+            int ov = cnt[i] - cap[i];
+            penalty += ov * ov * 500.0;
+        }
+
+    // 4-objective weighted fitness
+    return W1_DELAY   * normDelay
+         + W2_COMPUTE * normEnergy
+         + W3_NET     * normNet
+         + W4_FAIL    * normFail
+         + penalty;
+}
     // ══════════════════════════════════════════════════════════════════════
     //  DELAY MODEL  (Eq. 4-9, Ali et al. 2024)
     //
@@ -852,8 +1031,8 @@ public class Controller extends SimEntity {
 
         // ── Scenario [1] Cloud-Only baseline ─────────────────────────────
         // avg task 433 MI (TEMP/VIB mix); all tasks go to cloud (level=0)
-        double avgLen = 549.0;   // TEMP=300 MI, VIB=500 MI, mix
-        double avgData = 433.0, cloudMips = 44800.0;
+        double avgLen = 549.0;   // vehicular: SAFETY~250 + TRAFFIC~520 + INFO~1100 weighted avg
+        double avgData = avgLen * 1.1, cloudMips = 44800.0;  // vehicular data ≈ 1.1× task size
         double avgWl   = avgLen / cloudMips;
         double cDelayT = computeTotalDelay(avgLen, avgData, cloudMips, 0, avgWl);
         double cEnerT  = computeTotalEnergy(avgWl, 0);
@@ -862,11 +1041,14 @@ public class Controller extends SimEntity {
 
         // ── Scenario [3] Dynamic cloud baseline ──────────────────────────
         // Weighted average of base tasks (433 MI) and burst tasks (~2400 MI)
-        double dynAvgLen  = dynTasksReceived > 0
-                ? ((double) totalTasksReceived * 433.0
-                   + (dynTasksReceived - totalTasksReceived) * 2400.0)
-                  / dynTasksReceived : 433.0;
-        double dynAvgData = dynAvgLen * 1.25;  // ~1.25x data size on average
+     // Dynamic: 100 base (vehicular avg ~549 MI) + 150 burst (heavier rush-hour ~1030 MI avg)
+     // Burst avg: SAFETY~325 (30%) + TRAFFIC~850 (40%) + INFO~1950 (30%) = 1030 MI
+     int    dynBase     = Math.min(dynTasksReceived, 100);
+     int    dynBurst    = dynTasksReceived - dynBase;
+     double dynAvgLen   = dynTasksReceived > 0
+             ? (dynBase * avgLen + dynBurst * 1030.0) / dynTasksReceived
+             : avgLen;
+     double dynAvgData  = dynAvgLen * 1.25;
         double dynAvgWl   = dynAvgLen / cloudMips;
         double dCDelay = dynTasksReceived * computeTotalDelay(dynAvgLen, dynAvgData, cloudMips, 0, dynAvgWl);
         double dCEnergy= dynTasksReceived * computeTotalEnergy(dynAvgWl, 0);
@@ -922,7 +1104,7 @@ public class Controller extends SimEntity {
         DebugLogger.log("    E_FD << E_CS  (quadratic fog model < VM cloud model, Eq.12 vs 13)");
         DebugLogger.log("    Priority scheduling puts delay-sensitive tasks on edge first (EDF)");
         DebugLogger.log("");
-        DebugLogger.log("  MoAOA-Dynamic has HIGHER energy AND delay than Static because:");
+        DebugLogger.log("  MoAOA-Dynamic has HIGHER per-task energy/delay than Static because:"); 
         DebugLogger.log("    (a) Rush-hour burst: 1.5x more SAFETY/TRAFFIC/INFO tasks");
         DebugLogger.log("    (b) Halved RSU/vehicle capacity → burst overflow to cloud");
         DebugLogger.log("    (c) Burst TRAFFIC/INFO tasks are heavier (700-2700 MI, large data):");
@@ -932,6 +1114,15 @@ public class Controller extends SimEntity {
         DebugLogger.log("    the constrained resource environment, not algorithm quality.");
 
         // MoAOA parameters summary
+     // ── Task 8: Vehicular Event Summary ──────────────────────────────────
+        DebugLogger.section("5G Vehicular Event Summary  [Task 8 — V2X Management]");
+        DebugLogger.result("  RSU Handovers",    handoverCount + " vehicles transitioned zones");
+        DebugLogger.result("  TPC Events",       "every 10s  — power adapts to RSU load");
+        DebugLogger.result("  Final Tx Power",   String.format("%.0f dBm", currentTxPower));
+        DebugLogger.result("  DPS Scale-Up",     dpsScaleUpCount  + " events (RSU overload → expand)");
+        DebugLogger.result("  DPS Scale-Down",   dpsScaleDownCount + " events (RSU idle  → save energy)");
+        DebugLogger.separator();
+
         DebugLogger.section("MoAOA Parameters (Ali et al. 2024, Table 8)");
         DebugLogger.result("  Vmax", s((int)V_MAX)); DebugLogger.result("  Vmin", ""+V_MIN);
         DebugLogger.result("  Pop", s(POP_SIZE)); DebugLogger.result("  MaxIter", s(MAX_ITER));
@@ -940,7 +1131,10 @@ public class Controller extends SimEntity {
         DebugLogger.result("  μ",   ""+MU);        DebugLogger.result("  η", ""+ETA);
         DebugLogger.result("  p_IoT",""+P_IOT);   DebugLogger.result("  ak", ""+A_K);
         DebugLogger.result("  Ck",  ""+C_K);
-        DebugLogger.result("  Fitness",     "W*ΠDelay + (1-W)*Energy  (Eq. 3)");
+        DebugLogger.result("  Fitness",     "W1*Delay + W2*Energy + W3*NetEnergy + W4*FailProb");
+        DebugLogger.result("  Weights",     "W1=0.30  W2=0.30  W3=0.20(net)  W4=0.20(fail)");
+        DebugLogger.result("  Net model",   "E_net=P_tx*C3*data  C3=" + C3_NET);
+        DebugLogger.result("  Fail model",  "0.4*(1-bat/100) + 0.6*sigmoid((-75-RSSI)/5)");
         DebugLogger.result("  Position upd","Eq.17 (÷,×) and Eq.19 (+,−)");
         DebugLogger.result("  Archive mgmt","Crowding distance  (Eq. 16)");
         DebugLogger.result("  Static cap",

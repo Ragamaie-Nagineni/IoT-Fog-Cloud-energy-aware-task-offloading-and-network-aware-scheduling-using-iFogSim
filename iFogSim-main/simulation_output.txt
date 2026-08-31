@@ -1,717 +1,144 @@
 
 ═══════════════════════════════════════════════════════
-  MoAOA Task Offloading in 5G Vehicular Edge Computing
+   MOAOA Task Offloading in IoT-Fog-Cloud
 ═══════════════════════════════════════════════════════
 
-[STEP 1] Initialising CloudSim...
+[STEP 1] Initialising CloudSim simulation environment...
   [CloudSim      ] Initialised successfully
 
-[STEP 2] Creating application...
-  [Application   ] Created with 3 modules: safety_processor, traffic_processor, info_processor
+[STEP 2] Creating FogBroker and Application...
+  [Application   ] 'industrial_iot' created with 3 modules: data_preprocessor, analytics, cloud_storage
 
-[STEP 3] Creating vehicular topology...
-  [DATASET       ] Reading from dataset/vehicular_dataset.csv
-  [DATASET       ] Vehicles loaded  : 200
-  [DATASET       ] SAFETY sensors   : 69
-  [DATASET       ] TRAFFIC sensors  : 89
-  [DATASET       ] INFO sensors     : 42
-  [Topology      ] Fog devices : 206
-  [Topology      ] Sensors     : 200
+[STEP 3] Creating fog device topology...
+  [Topology      ] Total fog devices created : 7
+  [Topology      ] Total sensors created     : 8
   ─────────────────────────────────────────────────────
-  Vehicular Topology:
-    [Level 0] cloud                     | MIPS=44800 | RAM=40000 MB
-        [Level 2] RSU-0                     | MIPS= 5000 | RAM= 8000 MB
-        [Level 2] RSU-1                     | MIPS= 5000 | RAM= 8000 MB
-        [Level 2] RSU-2                     | MIPS= 5000 | RAM= 8000 MB
-        [Level 2] RSU-3                     | MIPS= 5000 | RAM= 8000 MB
-        [Level 2] RSU-4                     | MIPS= 5000 | RAM= 8000 MB
-          [Level 3] vehicle-V1                | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V2                | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V3                | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V4                | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V5                | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V6                | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V7                | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V8                | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V9                | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V10               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V11               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V12               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V13               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V14               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V15               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V16               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V17               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V18               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V19               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V20               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V21               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V22               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V23               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V24               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V25               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V26               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V27               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V28               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V29               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V30               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V31               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V32               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V33               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V34               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V35               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V36               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V37               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V38               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V39               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V40               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V41               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V42               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V43               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V44               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V45               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V46               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V47               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V48               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V49               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V50               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V51               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V52               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V53               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V54               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V55               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V56               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V57               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V58               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V59               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V60               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V61               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V62               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V63               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V64               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V65               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V66               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V67               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V68               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V69               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V70               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V71               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V72               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V73               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V74               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V75               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V76               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V77               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V78               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V79               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V80               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V81               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V82               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V83               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V84               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V85               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V86               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V87               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V88               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V89               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V90               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V91               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V92               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V93               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V94               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V95               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V96               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V97               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V98               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V99               | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V100              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V101              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V102              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V103              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V104              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V105              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V106              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V107              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V108              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V109              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V110              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V111              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V112              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V113              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V114              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V115              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V116              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V117              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V118              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V119              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V120              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V121              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V122              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V123              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V124              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V125              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V126              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V127              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V128              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V129              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V130              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V131              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V132              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V133              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V134              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V135              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V136              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V137              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V138              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V139              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V140              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V141              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V142              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V143              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V144              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V145              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V146              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V147              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V148              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V149              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V150              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V151              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V152              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V153              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V154              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V155              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V156              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V157              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V158              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V159              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V160              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V161              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V162              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V163              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V164              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V165              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V166              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V167              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V168              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V169              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V170              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V171              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V172              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V173              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V174              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V175              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V176              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V177              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V178              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V179              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V180              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V181              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V182              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V183              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V184              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V185              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V186              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V187              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V188              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V189              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V190              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V191              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V192              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V193              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V194              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V195              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V196              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V197              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V198              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V199              | MIPS=  500 | RAM= 1000 MB
-          [Level 3] vehicle-V200              | MIPS=  500 | RAM= 1000 MB
+  Fog Device Hierarchy:
+    [Level 0] cloud                  | MIPS=44800 | RAM=40000 MB
+      [Level 1] proxy-server           | MIPS= 2800 | RAM= 4000 MB
+      [Level 1] router-0               | MIPS= 2800 | RAM= 4000 MB
+          [Level 3] sensor-node-0-0        | MIPS=  500 | RAM= 1000 MB
+          [Level 3] sensor-node-0-1        | MIPS=  500 | RAM= 1000 MB
+          [Level 3] sensor-node-0-2        | MIPS=  500 | RAM= 1000 MB
+          [Level 3] sensor-node-0-3        | MIPS=  500 | RAM= 1000 MB
+  ─────────────────────────────────────────────────────
+  Sensors:
+    temp-0-0             | Type=TEMP   | Gateway=sensor-node-0-0
+    vib-0-0              | Type=VIB    | Gateway=sensor-node-0-0
+    temp-0-1             | Type=TEMP   | Gateway=sensor-node-0-1
+    vib-0-1              | Type=VIB    | Gateway=sensor-node-0-1
+    temp-0-2             | Type=TEMP   | Gateway=sensor-node-0-2
+    vib-0-2              | Type=VIB    | Gateway=sensor-node-0-2
+    temp-0-3             | Type=TEMP   | Gateway=sensor-node-0-3
+    vib-0-3              | Type=VIB    | Gateway=sensor-node-0-3
   ─────────────────────────────────────────────────────
 
-[STEP 4] Placing modules...
+[STEP 4] Performing module placement via FogOffloadingPlacement...
   ─────────────────────────────────────────────────────
   Initial Module Placement (Vehicular wiring):
   ─────────────────────────────────────────────────────
-  safety_processor       → vehicle-V1             [Level 3 — Vehicle]
-  safety_processor       → vehicle-V2             [Level 3 — Vehicle]
-  safety_processor       → vehicle-V3             [Level 3 — Vehicle]
-  safety_processor       → vehicle-V4             [Level 3 — Vehicle]
-  safety_processor       → vehicle-V5             [Level 3 — Vehicle]
-  safety_processor       → vehicle-V6             [Level 3 — Vehicle]
-  safety_processor       → vehicle-V7             [Level 3 — Vehicle]
-  safety_processor       → vehicle-V8             [Level 3 — Vehicle]
-  safety_processor       → vehicle-V9             [Level 3 — Vehicle]
-  safety_processor       → vehicle-V10            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V11            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V12            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V13            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V14            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V15            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V16            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V17            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V18            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V19            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V20            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V21            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V22            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V23            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V24            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V25            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V26            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V27            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V28            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V29            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V30            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V31            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V32            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V33            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V34            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V35            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V36            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V37            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V38            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V39            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V40            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V41            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V42            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V43            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V44            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V45            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V46            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V47            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V48            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V49            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V50            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V51            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V52            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V53            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V54            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V55            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V56            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V57            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V58            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V59            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V60            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V61            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V62            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V63            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V64            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V65            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V66            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V67            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V68            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V69            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V70            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V71            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V72            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V73            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V74            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V75            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V76            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V77            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V78            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V79            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V80            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V81            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V82            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V83            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V84            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V85            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V86            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V87            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V88            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V89            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V90            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V91            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V92            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V93            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V94            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V95            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V96            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V97            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V98            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V99            [Level 3 — Vehicle]
-  safety_processor       → vehicle-V100           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V101           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V102           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V103           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V104           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V105           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V106           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V107           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V108           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V109           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V110           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V111           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V112           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V113           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V114           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V115           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V116           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V117           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V118           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V119           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V120           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V121           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V122           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V123           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V124           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V125           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V126           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V127           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V128           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V129           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V130           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V131           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V132           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V133           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V134           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V135           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V136           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V137           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V138           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V139           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V140           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V141           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V142           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V143           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V144           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V145           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V146           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V147           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V148           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V149           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V150           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V151           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V152           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V153           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V154           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V155           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V156           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V157           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V158           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V159           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V160           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V161           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V162           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V163           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V164           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V165           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V166           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V167           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V168           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V169           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V170           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V171           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V172           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V173           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V174           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V175           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V176           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V177           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V178           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V179           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V180           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V181           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V182           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V183           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V184           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V185           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V186           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V187           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V188           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V189           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V190           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V191           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V192           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V193           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V194           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V195           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V196           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V197           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V198           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V199           [Level 3 — Vehicle]
-  safety_processor       → vehicle-V200           [Level 3 — Vehicle]
-  traffic_processor      → RSU-0                  [Level 2 — RSU]
-  traffic_processor      → RSU-1                  [Level 2 — RSU]
-  traffic_processor      → RSU-2                  [Level 2 — RSU]
-  traffic_processor      → RSU-3                  [Level 2 — RSU]
-  traffic_processor      → RSU-4                  [Level 2 — RSU]
-  info_processor         → cloud                  [Level 0 — Cloud]
+  data_preprocessor      → sensor-node-0-0        [Level 3 — Vehicle]
+  data_preprocessor      → sensor-node-0-1        [Level 3 — Vehicle]
+  data_preprocessor      → sensor-node-0-2        [Level 3 — Vehicle]
+  data_preprocessor      → sensor-node-0-3        [Level 3 — Vehicle]
+  analytics              → cloud                  [Level 0 — Cloud]
+  cloud_storage          → cloud                  [Level 0 — Cloud]
   ─────────────────────────────────────────────────────
   [PLACEMENT     ] Module placement complete
   [PLACEMENT     ] FogOffloadingPlacement initialised — MoAOA optimization runs in Controller via MOAOA_OPTIMIZE / MOAOA_DYNAMIC events
 
-[STEP 5] Creating controller...
-  [Controller    ] Vehicular controller created
+[STEP 5] Creating Controller and connecting sensors...
+  [Controller    ] master-controller created and wired
 
-[STEP 6] Starting simulation...
-  [APP SUBMIT    ] 'vehicular_iot' at t=0.00
+[STEP 6] Starting CloudSim simulation...
+  [APP SUBMIT    ] 'industrial_iot' at t=0.00
+  [TPC_UPDATE  ] t= 10.0s  RSU tasks/node=0    cap=40  → 17 dBm  (low load   → energy-save mode)
+  [DPS_SCALE   ] t= 15.0s  RSU util=0.0%  SCALE-DOWN → energy-save mode (-10% capacity)
+  [V_TASK_ARR  ] t= 20.0s  Pending → SAFETY:0    TRAFFIC:0    INFO:0     (EDF priority active for SAFETY)
+  [TPC_UPDATE  ] t= 20.0s  RSU tasks/node=0    cap=40  → 17 dBm  (low load   → energy-save mode)
+  [RSU_HANDOVER] t= 30.0s  0 vehicles transitioning RSU zone  (cumulative: 0 handovers)
+  [DPS_SCALE   ] t= 30.0s  RSU util=0.0%  SCALE-DOWN → energy-save mode (-10% capacity)
+  [TPC_UPDATE  ] t= 30.0s  RSU tasks/node=0    cap=40  → 17 dBm  (low load   → energy-save mode)
+  [V_TASK_ARR  ] t= 40.0s  Pending → SAFETY:0    TRAFFIC:0    INFO:0     (EDF priority active for SAFETY)
+  [TPC_UPDATE  ] t= 40.0s  RSU tasks/node=0    cap=40  → 17 dBm  (low load   → energy-save mode)
+  [DPS_SCALE   ] t= 45.0s  RSU util=0.0%  SCALE-DOWN → energy-save mode (-10% capacity)
 
 ═══════════════════════════════════════════════════════
   MoAOA-Dynamic  (t=50.0s)
 ═══════════════════════════════════════════════════════
   100 base (vehicular) + 150 burst (rush-hour) = 250 total tasks
-  VEHICLE=5  RSU=100  CLOUD=145  |  Delay=14172.9965  Energy=15886.5380  Overload=no
+  VEHICLE=4  RSU=0  CLOUD=240  |  Delay=17789.3700  Energy=23285.6867  Overload=no
+  [TPC_UPDATE  ] t= 50.0s  RSU tasks/node=0    cap=40  → 17 dBm  (low load   → energy-save mode)
 
 ═══════════════════════════════════════════════════════
-  MoAOA-Static  (t=55.0s, tasks=69)
+  MoAOA-Static  (t=55.0s, tasks=4)
 ═══════════════════════════════════════════════════════
-  VEHICLE=0  RSU=69  CLOUD=0  |  Delay=174.2571  Energy=1266.9190
+  VEHICLE=0  RSU=0  CLOUD=0  |  Delay=22.4978  Energy=73.5001
+  [V_TASK_ARR  ] t= 60.0s  Pending → SAFETY:0    TRAFFIC:0    INFO:0     (EDF priority active for SAFETY)
+  [DPS_SCALE   ] t= 60.0s  RSU util=0.0%  SCALE-DOWN → energy-save mode (-10% capacity)
+  [TPC_UPDATE  ] t= 60.0s  RSU tasks/node=0    cap=40  → 17 dBm  (low load   → energy-save mode)
 
 ═══════════════════════════════════════════════════════
-  MoAOA-Static  (t=60.0s, tasks=158)
+  MoAOA-Static  (t=60.0s, tasks=4)
 ═══════════════════════════════════════════════════════
-  VEHICLE=0  RSU=227  CLOUD=0  |  Delay=844.0950  Energy=4168.5145
+  VEHICLE=0  RSU=0  CLOUD=0  |  Delay=44.9956  Energy=147.0003
 
 ═══════════════════════════════════════════════════════
-  MoAOA-Static  (t=65.0s, tasks=269)
+  MoAOA-Static  (t=65.0s, tasks=12)
 ═══════════════════════════════════════════════════════
-  VEHICLE=8  RSU=427  CLOUD=61  |  Delay=3049.3739  Energy=13861.6610
+  VEHICLE=2  RSU=0  CLOUD=4  |  Delay=153.1522  Energy=679.1953
+  [TPC_UPDATE  ] t= 70.0s  RSU tasks/node=0    cap=40  → 17 dBm  (low load   → energy-save mode)
 
 ═══════════════════════════════════════════════════════
-  MoAOA-Static  (t=70.0s, tasks=227)
+  MoAOA-Static  (t=70.0s, tasks=8)
 ═══════════════════════════════════════════════════════
-  VEHICLE=16  RSU=627  CLOUD=80  |  Delay=4046.9832  Energy=19510.4887
+  VEHICLE=4  RSU=0  CLOUD=4  |  Delay=199.3212  Energy=826.3618
+  [DPS_SCALE   ] t= 75.0s  RSU util=0.0%  SCALE-DOWN → energy-save mode (-10% capacity)
 
 ═══════════════════════════════════════════════════════
-  MoAOA-Static  (t=75.0s, tasks=200)
+  MoAOA-Static  (t=75.0s, tasks=8)
 ═══════════════════════════════════════════════════════
-  VEHICLE=20  RSU=785  CLOUD=118  |  Delay=5893.6335  Energy=26144.9636
+  VEHICLE=10  RSU=0  CLOUD=4  |  Delay=239.1637  Energy=973.7651
+  [V_TASK_ARR  ] t= 80.0s  Pending → SAFETY:0    TRAFFIC:0    INFO:0     (EDF priority active for SAFETY)
+  [TPC_UPDATE  ] t= 80.0s  RSU tasks/node=0    cap=40  → 17 dBm  (low load   → energy-save mode)
 
 ═══════════════════════════════════════════════════════
-  MoAOA-Static  (t=80.0s, tasks=227)
+  MoAOA-Static  (t=80.0s, tasks=8)
 ═══════════════════════════════════════════════════════
-  VEHICLE=28  RSU=985  CLOUD=137  |  Delay=6891.2429  Energy=31793.7914
+  VEHICLE=12  RSU=0  CLOUD=4  |  Delay=285.3327  Energy=1120.9316
 
 ═══════════════════════════════════════════════════════
-  MoAOA-Static  (t=85.0s, tasks=269)
+  MoAOA-Static  (t=85.0s, tasks=12)
 ═══════════════════════════════════════════════════════
-  VEHICLE=36  RSU=1185  CLOUD=198  |  Delay=9096.5217  Energy=41486.9378
+  VEHICLE=14  RSU=0  CLOUD=8  |  Delay=393.4894  Energy=1653.1266
+  [DPS_SCALE   ] t= 90.0s  RSU util=0.0%  SCALE-DOWN → energy-save mode (-10% capacity)
+  [TPC_UPDATE  ] t= 90.0s  RSU tasks/node=0    cap=40  → 17 dBm  (low load   → energy-save mode)
 
 ═══════════════════════════════════════════════════════
-  MoAOA-Static  (t=90.0s, tasks=158)
+  MoAOA-Static  (t=90.0s, tasks=4)
 ═══════════════════════════════════════════════════════
-  VEHICLE=36  RSU=1343  CLOUD=198  |  Delay=9766.3596  Energy=44388.5334
+  VEHICLE=14  RSU=0  CLOUD=8  |  Delay=415.9871  Energy=1726.6267
 
 ═══════════════════════════════════════════════════════
-  MoAOA-Static  (t=95.0s, tasks=269)
+  MoAOA-Static  (t=95.0s, tasks=12)
 ═══════════════════════════════════════════════════════
-  VEHICLE=44  RSU=1543  CLOUD=259  |  Delay=11971.6385  Energy=54081.6798
+  VEHICLE=16  RSU=0  CLOUD=12  |  Delay=524.1437  Energy=2258.8218
 
 ═══════════════════════════════════════════════════════
   Per-Device Energy & Cost
 ═══════════════════════════════════════════════════════
   Device                    Level    Energy (J)     Cost ($)    
   ─────────────────────────────────────────────────────
-  cloud                     0        134610.7143    2000.000000 
-  RSU-0                     2        9299.5580      0.000000    
-  RSU-1                     2        9299.5580      0.000000    
-  RSU-2                     2        9299.5580      0.000000    
-  RSU-3                     2        9299.5580      0.000000    
-  RSU-4                     2        9299.5580      0.000000    
-  vehicle-V1                3        8753.0000      0.000000    
-  vehicle-V2                3        8753.0000      0.000000    
-  vehicle-V3                3        8753.0000      0.000000    
-  vehicle-V4                3        8753.0000      0.000000    
-  vehicle-V5                3        8753.0000      0.000000    
-  vehicle-V6                3        8753.0000      0.000000    
-  vehicle-V7                3        8753.0000      0.000000    
-  vehicle-V8                3        8753.0000      0.000000    
-  vehicle-V9                3        8753.0000      0.000000    
-  vehicle-V10               3        8753.0000      0.000000    
-  vehicle-V11               3        8753.0000      0.000000    
-  vehicle-V12               3        8753.0000      0.000000    
-  vehicle-V13               3        8753.0000      0.000000    
-  vehicle-V14               3        8753.0000      0.000000    
-  vehicle-V15               3        8753.0000      0.000000    
-  vehicle-V16               3        8753.0000      0.000000    
-  vehicle-V17               3        8753.0000      0.000000    
-  vehicle-V18               3        8753.0000      0.000000    
-  vehicle-V19               3        8753.0000      0.000000    
-  vehicle-V20               3        8753.0000      0.000000    
-  vehicle-V21               3        8753.0000      0.000000    
-  vehicle-V22               3        8753.0000      0.000000    
-  vehicle-V23               3        8753.0000      0.000000    
-  vehicle-V24               3        8753.0000      0.000000    
-  vehicle-V25               3        8753.0000      0.000000    
-  vehicle-V26               3        8753.0000      0.000000    
-  vehicle-V27               3        8753.0000      0.000000    
-  vehicle-V28               3        8753.0000      0.000000    
-  vehicle-V29               3        8753.0000      0.000000    
-  vehicle-V30               3        8753.0000      0.000000    
-  vehicle-V31               3        8753.0000      0.000000    
-  vehicle-V32               3        8753.0000      0.000000    
-  vehicle-V33               3        8753.0000      0.000000    
-  vehicle-V34               3        8753.0000      0.000000    
-  vehicle-V35               3        8753.0000      0.000000    
-  vehicle-V36               3        8753.0000      0.000000    
-  vehicle-V37               3        8753.0000      0.000000    
-  vehicle-V38               3        8753.0000      0.000000    
-  vehicle-V39               3        8753.0000      0.000000    
-  vehicle-V40               3        8753.0000      0.000000    
-  vehicle-V41               3        8753.0000      0.000000    
-  vehicle-V42               3        8753.0000      0.000000    
-  vehicle-V43               3        8753.0000      0.000000    
-  vehicle-V44               3        8753.0000      0.000000    
-  vehicle-V45               3        8753.0000      0.000000    
-  vehicle-V46               3        8753.0000      0.000000    
-  vehicle-V47               3        8753.0000      0.000000    
-  vehicle-V48               3        8753.0000      0.000000    
-  vehicle-V49               3        8753.0000      0.000000    
-  vehicle-V50               3        8753.0000      0.000000    
-  vehicle-V51               3        8753.0000      0.000000    
-  vehicle-V52               3        8753.0000      0.000000    
-  vehicle-V53               3        8753.0000      0.000000    
-  vehicle-V54               3        8753.0000      0.000000    
-  vehicle-V55               3        8753.0000      0.000000    
-  vehicle-V56               3        8753.0000      0.000000    
-  vehicle-V57               3        8753.0000      0.000000    
-  vehicle-V58               3        8753.0000      0.000000    
-  vehicle-V59               3        8753.0000      0.000000    
-  vehicle-V60               3        8753.0000      0.000000    
-  vehicle-V61               3        8753.0000      0.000000    
-  vehicle-V62               3        8753.0000      0.000000    
-  vehicle-V63               3        8753.0000      0.000000    
-  vehicle-V64               3        8753.0000      0.000000    
-  vehicle-V65               3        8753.0000      0.000000    
-  vehicle-V66               3        8753.0000      0.000000    
-  vehicle-V67               3        8753.0000      0.000000    
-  vehicle-V68               3        8753.0000      0.000000    
-  vehicle-V69               3        8753.0000      0.000000    
-  vehicle-V70               3        8753.0000      0.000000    
-  vehicle-V71               3        8753.0000      0.000000    
-  vehicle-V72               3        8753.0000      0.000000    
-  vehicle-V73               3        8753.0000      0.000000    
-  vehicle-V74               3        8753.0000      0.000000    
-  vehicle-V75               3        8753.0000      0.000000    
-  vehicle-V76               3        8753.0000      0.000000    
-  vehicle-V77               3        8753.0000      0.000000    
-  vehicle-V78               3        8753.0000      0.000000    
-  vehicle-V79               3        8753.0000      0.000000    
-  vehicle-V80               3        8753.0000      0.000000    
-  vehicle-V81               3        8753.0000      0.000000    
-  vehicle-V82               3        8753.0000      0.000000    
-  vehicle-V83               3        8753.0000      0.000000    
-  vehicle-V84               3        8753.0000      0.000000    
-  vehicle-V85               3        8753.0000      0.000000    
-  vehicle-V86               3        8753.0000      0.000000    
-  vehicle-V87               3        8753.0000      0.000000    
-  vehicle-V88               3        8753.0000      0.000000    
-  vehicle-V89               3        8753.0000      0.000000    
-  vehicle-V90               3        8753.0000      0.000000    
-  vehicle-V91               3        8753.0000      0.000000    
-  vehicle-V92               3        8753.0000      0.000000    
-  vehicle-V93               3        8753.0000      0.000000    
-  vehicle-V94               3        8753.0000      0.000000    
-  vehicle-V95               3        8753.0000      0.000000    
-  vehicle-V96               3        8753.0000      0.000000    
-  vehicle-V97               3        8753.0000      0.000000    
-  vehicle-V98               3        8753.0000      0.000000    
-  vehicle-V99               3        8753.0000      0.000000    
-  vehicle-V100              3        8753.0000      0.000000    
-  vehicle-V101              3        8753.0000      0.000000    
-  vehicle-V102              3        8753.0000      0.000000    
-  vehicle-V103              3        8753.0000      0.000000    
-  vehicle-V104              3        8753.0000      0.000000    
-  vehicle-V105              3        8753.0000      0.000000    
-  vehicle-V106              3        8753.0000      0.000000    
-  vehicle-V107              3        8753.0000      0.000000    
-  vehicle-V108              3        8753.0000      0.000000    
-  vehicle-V109              3        8753.0000      0.000000    
-  vehicle-V110              3        8753.0000      0.000000    
-  vehicle-V111              3        8753.0000      0.000000    
-  vehicle-V112              3        8753.0000      0.000000    
-  vehicle-V113              3        8753.0000      0.000000    
-  vehicle-V114              3        8753.0000      0.000000    
-  vehicle-V115              3        8753.0000      0.000000    
-  vehicle-V116              3        8753.0000      0.000000    
-  vehicle-V117              3        8753.0000      0.000000    
-  vehicle-V118              3        8753.0000      0.000000    
-  vehicle-V119              3        8753.0000      0.000000    
-  vehicle-V120              3        8753.0000      0.000000    
-  vehicle-V121              3        8753.0000      0.000000    
-  vehicle-V122              3        8753.0000      0.000000    
-  vehicle-V123              3        8753.0000      0.000000    
-  vehicle-V124              3        8753.0000      0.000000    
-  vehicle-V125              3        8753.0000      0.000000    
-  vehicle-V126              3        8753.0000      0.000000    
-  vehicle-V127              3        8753.0000      0.000000    
-  vehicle-V128              3        8753.0000      0.000000    
-  vehicle-V129              3        8753.0000      0.000000    
-  vehicle-V130              3        8753.0000      0.000000    
-  vehicle-V131              3        8753.0000      0.000000    
-  vehicle-V132              3        8753.0000      0.000000    
-  vehicle-V133              3        8753.0000      0.000000    
-  vehicle-V134              3        8753.0000      0.000000    
-  vehicle-V135              3        8753.0000      0.000000    
-  vehicle-V136              3        8753.0000      0.000000    
-  vehicle-V137              3        8753.0000      0.000000    
-  vehicle-V138              3        8753.0000      0.000000    
-  vehicle-V139              3        8753.0000      0.000000    
-  vehicle-V140              3        8753.0000      0.000000    
-  vehicle-V141              3        8753.0000      0.000000    
-  vehicle-V142              3        8753.0000      0.000000    
-  vehicle-V143              3        8753.0000      0.000000    
-  vehicle-V144              3        8753.0000      0.000000    
-  vehicle-V145              3        8753.0000      0.000000    
-  vehicle-V146              3        8753.0000      0.000000    
-  vehicle-V147              3        8753.0000      0.000000    
-  vehicle-V148              3        8753.0000      0.000000    
-  vehicle-V149              3        8753.0000      0.000000    
-  vehicle-V150              3        8753.0000      0.000000    
-  vehicle-V151              3        8753.0000      0.000000    
-  vehicle-V152              3        8753.0000      0.000000    
-  vehicle-V153              3        8753.0000      0.000000    
-  vehicle-V154              3        8753.0000      0.000000    
-  vehicle-V155              3        8753.0000      0.000000    
-  vehicle-V156              3        8753.0000      0.000000    
-  vehicle-V157              3        8753.0000      0.000000    
-  vehicle-V158              3        8753.0000      0.000000    
-  vehicle-V159              3        8753.0000      0.000000    
-  vehicle-V160              3        8753.0000      0.000000    
-  vehicle-V161              3        8753.0000      0.000000    
-  vehicle-V162              3        8753.0000      0.000000    
-  vehicle-V163              3        8753.0000      0.000000    
-  vehicle-V164              3        8753.0000      0.000000    
-  vehicle-V165              3        8753.0000      0.000000    
-  vehicle-V166              3        8753.0000      0.000000    
-  vehicle-V167              3        8753.0000      0.000000    
-  vehicle-V168              3        8753.0000      0.000000    
-  vehicle-V169              3        8753.0000      0.000000    
-  vehicle-V170              3        8753.0000      0.000000    
-  vehicle-V171              3        8753.0000      0.000000    
-  vehicle-V172              3        8753.0000      0.000000    
-  vehicle-V173              3        8753.0000      0.000000    
-  vehicle-V174              3        8753.0000      0.000000    
-  vehicle-V175              3        8753.0000      0.000000    
-  vehicle-V176              3        8753.0000      0.000000    
-  vehicle-V177              3        8753.0000      0.000000    
-  vehicle-V178              3        8753.0000      0.000000    
-  vehicle-V179              3        8753.0000      0.000000    
-  vehicle-V180              3        8753.0000      0.000000    
-  vehicle-V181              3        8753.0000      0.000000    
-  vehicle-V182              3        8753.0000      0.000000    
-  vehicle-V183              3        8753.0000      0.000000    
-  vehicle-V184              3        8753.0000      0.000000    
-  vehicle-V185              3        8753.0000      0.000000    
-  vehicle-V186              3        8753.0000      0.000000    
-  vehicle-V187              3        8753.0000      0.000000    
-  vehicle-V188              3        8753.0000      0.000000    
-  vehicle-V189              3        8753.0000      0.000000    
-  vehicle-V190              3        8753.0000      0.000000    
-  vehicle-V191              3        8753.0000      0.000000    
-  vehicle-V192              3        8753.0000      0.000000    
-  vehicle-V193              3        8753.0000      0.000000    
-  vehicle-V194              3        8753.0000      0.000000    
-  vehicle-V195              3        8753.0000      0.000000    
-  vehicle-V196              3        8753.0000      0.000000    
-  vehicle-V197              3        8753.0000      0.000000    
-  vehicle-V198              3        8753.0000      0.000000    
-  vehicle-V199              3        8753.0000      0.000000    
-  vehicle-V200              3        8753.0000      0.000000    
+  cloud                     0        136021.4286    4000.000000 
+  proxy-server              1        8343.3300      0.000000    
+  router-0                  1        8343.3300      0.000000    
+  sensor-node-0-0           3        8753.0000      0.000000    
+  sensor-node-0-1           3        8753.0000      0.000000    
+  sensor-node-0-2           3        8753.0000      0.000000    
+  sensor-node-0-3           3        8753.0000      0.000000    
   ─────────────────────────────────────────────────────
-    TOTAL Energy (J)                  : 1931708.5043
-    TOTAL Cost ($)                    : 2000.000000
+    TOTAL Energy (J)                  : 187720.0886
+    TOTAL Cost ($)                    : 4000.000000
 
 ═══════════════════════════════════════════════════════
   THREE-WAY COMPARISON  [MoAOA — Ali et al. IEEE Access 2024]
@@ -722,17 +149,17 @@
   ─────────────────────────────────────────────────────
   Metric                            [1] Cloud-Only    [2] MoAOA-Static  [3] MoAOA-Dynamic
   ─────────────────────────────────────────────────────
-  Total Tasks                       2073              2073              250             
-  Task Compute Energy (J)           199541.06         54081.68          15886.54        
-    vs Cloud-Only                   baseline          ↓ 72.9           %  ↓ 34.0           %
-  Total Delay (ms)                  45910.5121        11971.6385        14172.9965      
-    vs Cloud-Only                   baseline          ↓ 73.9           %  ↑ 0.0            %
-  Avg Energy/Task (J)               96.2571           26.0886           63.5462         
-  Avg Delay/Task (ms)               22.1469           5.7750            56.6920         
+  Total Tasks                       80                80                250             
+  Task Compute Energy (J)           7700.57           2258.82           23285.69        
+    vs Cloud-Only                   baseline          ↓ 70.7           %  ↓ 3.2            %
+  Total Delay (ms)                  2455.3516         524.1437          17789.3700      
+    vs Cloud-Only                   baseline          ↓ 78.7           %  ↑ 34.6           %
+  Avg Energy/Task (J)               96.2571           28.2353           93.1427         
+  Avg Delay/Task (ms)               30.6919           6.5518            71.1575         
   ─────────────────────────────────────────────────────
-  Tasks → VEHICLE                   0 (all cloud)     44                5               
-  Tasks → RSU                       0 (all cloud)     1543              100             
-  Tasks → CLOUD                     2073              259               145             
+  Tasks → VEHICLE                   0 (all cloud)     16                4               
+  Tasks → RSU                       0 (all cloud)     0                 0               
+  Tasks → CLOUD                     80                12                240             
   Overloaded Rounds                 N/A               0                 0 / 1           
   ─────────────────────────────────────────────────────
 
@@ -744,7 +171,7 @@
     E_FD << E_CS  (quadratic fog model < VM cloud model, Eq.12 vs 13)
     Priority scheduling puts delay-sensitive tasks on edge first (EDF)
 
-  MoAOA-Dynamic has HIGHER energy AND delay than Static because:
+  MoAOA-Dynamic has HIGHER per-task energy/delay than Static because:
     (a) Rush-hour burst: 1.5x more SAFETY/TRAFFIC/INFO tasks
     (b) Halved RSU/vehicle capacity → burst overflow to cloud
     (c) Burst TRAFFIC/INFO tasks are heavier (700-2700 MI, large data):
@@ -752,6 +179,16 @@
         → Cloud VM cost E_CS ≈ 78.4 J >> E_FD ≈ 0.5 J (Eq.12 vs 13)
     The SAME MoAOA algorithm is applied — degradation is from
     the constrained resource environment, not algorithm quality.
+
+═══════════════════════════════════════════════════════
+  5G Vehicular Event Summary  [Task 8 — V2X Management]
+═══════════════════════════════════════════════════════
+    RSU Handovers                     : 0 vehicles transitioned zones
+    TPC Events                        : every 10s  — power adapts to RSU load
+    Final Tx Power                    : 17 dBm
+    DPS Scale-Up                      : 0 events (RSU overload → expand)
+    DPS Scale-Down                    : 6 events (RSU idle  → save energy)
+  ─────────────────────────────────────────────────────
 
 ═══════════════════════════════════════════════════════
   MoAOA Parameters (Ali et al. 2024, Table 8)
@@ -769,7 +206,10 @@
     p_IoT                             : 25.0
     ak                                : 4.9
     Ck                                : 5.32E-19
-    Fitness                           : W*ΠDelay + (1-W)*Energy  (Eq. 3)
+    Fitness                           : W1*Delay + W2*Energy + W3*NetEnergy + W4*FailProb
+    Weights                           : W1=0.30  W2=0.30  W3=0.20(net)  W4=0.20(fail)
+    Net model                         : E_net=P_tx*C3*data  C3=8.0E-4
+    Fail model                        : 0.4*(1-bat/100) + 0.6*sigmoid((-75-RSSI)/5)
     Position upd                      : Eq.17 (÷,×) and Eq.19 (+,−)
     Archive mgmt                      : Crowding distance  (Eq. 16)
     Static cap                        : Vehicle=2 RSU=40 Cloud=∞
@@ -781,7 +221,7 @@
   (No completed loops)
   ─────────────────────────────────────────────────────
     Network (bits/s)                  : 0.0000
-    Wall clock                        : 616 ms
+    Wall clock                        : 234 ms
 
 ═══════════════════════════════════════════════════════
   END OF MoAOA EVALUATION
