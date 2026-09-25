@@ -738,7 +738,7 @@
 ═══════════════════════════════════════════════════════
   [1] Cloud-Only  : All tasks → cloud, no offloading
   [2] MoAOA-Static: SAME MoAOA algorithm, normal load, full capacity
-  [3] MoAOA-Dyn   : SAME MoAOA algorithm, burst load (1.5x), halved capacity
+  [3] MoAOA-Dyn   : SAME MoAOA algorithm, burst load (1.5x), DPS scaled capacity (2x)
   ─────────────────────────────────────────────────────
   Metric                            [1] Cloud-Only    [2] MoAOA-Static  [3] MoAOA-Dynamic
   ─────────────────────────────────────────────────────
@@ -815,7 +815,7 @@
   (No completed loops)
   ─────────────────────────────────────────────────────
     Network (bits/s)                  : 0.0000
-    Wall clock                        : 1538 ms
+    Wall clock                        : 1448 ms
 
 ═══════════════════════════════════════════════════════
   END OF MoAOA EVALUATION

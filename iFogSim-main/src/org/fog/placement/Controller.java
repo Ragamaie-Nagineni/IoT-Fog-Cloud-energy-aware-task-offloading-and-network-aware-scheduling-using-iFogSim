@@ -1089,7 +1089,7 @@ private double fitnessOF(int[] sol, int numTasks, int numNodes,
         DebugLogger.section("THREE-WAY COMPARISON  [MoAOA — Ali et al. IEEE Access 2024]");
         DebugLogger.log("  [1] Cloud-Only  : All tasks → cloud, no offloading");
         DebugLogger.log("  [2] MoAOA-Static: SAME MoAOA algorithm, normal load, full capacity");
-        DebugLogger.log("  [3] MoAOA-Dyn   : SAME MoAOA algorithm, burst load (1.5x), halved capacity");
+        DebugLogger.log("  [3] MoAOA-Dyn   : SAME MoAOA algorithm, burst load (1.5x), DPS scaled capacity (2x)");
         DebugLogger.separator();
         row("Metric", "[1] Cloud-Only", "[2] MoAOA-Static", "[3] MoAOA-Dynamic");
         DebugLogger.separator();
