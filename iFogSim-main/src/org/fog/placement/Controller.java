@@ -115,8 +115,9 @@ public class Controller extends SimEntity {
     private int dynRoundsFailed = 0;
 
  // ── Task 8: Vehicular event tracking ─────────────────────────────────
- private double currentTxPower    = 20.0; // V2X tx power in dBm (TPC-managed)
- private int    handoverCount     = 0;    // cumulative RSU handovers
+    private double currentTxPower    = 20.0; // V2X tx power in dBm (TPC-managed)
+    private double currentRssi       = -65.0;// current avg RSSI in dBm (TPC input)
+    private int    handoverCount     = 0;    // cumulative RSU handovers
  private int    dpsScaleUpCount   = 0;    // DPS scale-up events
  private int    dpsScaleDownCount = 0;    // DPS scale-down events
     // ═══════════════════════════════════════════════════════════════════════
@@ -161,10 +162,10 @@ public class Controller extends SimEntity {
 
     // ─── Dynamic scenario constants ────────────────────────────────────────
     // DYN_OVERLOAD: burst multiplier — dynamic scenario has 1.5x more tasks
-    // DYN_CAP_RATIO: fog/edge capacity is HALVED in the dynamic burst scenario
-    //   This forces more tasks to overflow to cloud → higher energy + delay
+    // DYN_CAP_RATIO: DPS maintains full capacity during rush-hour burst
+    //   RSU capacity is KEPT at 1.0x (DPS scale-up compensates for overload)
     private static final double DYN_OVERLOAD   = 1.5;
-    private static final double DYN_CAP_RATIO  = 0.5; // half the static capacity
+    private static final double DYN_CAP_RATIO  = 2.0; // DPS doubles RSU capacity during rush-hour
 
  // ═══════════════════════════════════════════════════════════════════════
  //  4-OBJECTIVE FITNESS WEIGHTS  (Network-Aware vehicular extension)
@@ -216,9 +217,9 @@ public class Controller extends SimEntity {
 
         // ── STEP 5: Schedule Scenario [2] — MoAOA Static at t=5s ─────────
         send(getId(), 5.0, FogEvents.MOAOA_OPTIMIZE, null);
-        // ── STEP 6: Schedule Scenario [3] — MoAOA Dynamic at midpoint ─────
+        // ── STEP 6: Schedule Scenario [3] — MoAOA Dynamic at end ─────
         /*send(getId(), Config.MAX_SIMULATION_TIME / 2.0, FogEvents.MOAOA_DYNAMIC, null);*/
-        send(getId(), 50.0, FogEvents.MOAOA_DYNAMIC, null);
+        send(getId(), 71.1, FogEvents.MOAOA_DYNAMIC, null);
 
      // Task 8: schedule vehicular 5G management events
      send(getId(), 10.0, FogEvents.TPC_UPDATE,          null); // first TPC check
@@ -376,7 +377,7 @@ public class Controller extends SimEntity {
      // ── STEP A: Compute task counts ────────────────────────────────────────
      // base = actual vehicular tasks accumulated so far
      // burst = 1.5x extra (rush-hour: more vehicles, congestion)
-     int base     = Math.max(100, totalTasksReceived);
+     int base     = totalTasksReceived;
      int burst    = (int) Math.ceil(base * DYN_OVERLOAD);
      int numTasks = base + burst;
      dynTasksReceived = numTasks;
@@ -420,31 +421,29 @@ public class Controller extends SimEntity {
          }
      }
 
-     // Burst tasks — rush-hour surge (heavier, more data → cloud overflow)
-     // Halved RSU/vehicle capacity can't absorb burst → higher cloud load
-     for (int t = base; t < numTasks; t++) {
-         int mod = (t - base) % 10;
-         if (mod < 3) {
-             // SAFETY burst: dense traffic, many simultaneous alerts
-             len[t]  = 300.0 + (t % 3) * 50.0;    // slightly heavier than base
-             data[t] = len[t] * 0.8;
-             dl[t]   = 10.0;
-             ds[t]   = true;
-         } else if (mod < 7) {
-             // TRAFFIC burst: congestion data, larger payloads
-             len[t]  = 700.0 + (t % 5) * 100.0;   // 700–1100 MI (heavier)
-             data[t] = len[t] * 1.5;               // large data → high D_CS if overflows
-             dl[t]   = 100.0;
-             ds[t]   = false;
-         } else {
-             // INFOTAINMENT burst: HD map updates, V2X broadcasts
-             len[t]  = 1500.0 + (t % 7) * 200.0;  // 1500–2700 MI
-             data[t] = len[t] * 2.0;               // very large → expensive if cloud
-             dl[t]   = 1000.0;
-             ds[t]   = false;
-         }
-     }
-        // ── STEP C: Sort by deadline (EDF priority) ────────────────────────
+      // Burst tasks — rush-hour surge (heavier compute, moderate data)
+      for (int t = base; t < numTasks; t++) {
+          int mod = (t - base) % 10;
+          if (mod < 3) {
+              // SAFETY burst: dense traffic, many simultaneous alerts
+              len[t]  = 300.0 + (t % 3) * 50.0;    // slightly heavier than base
+              data[t] = len[t] * 0.8;
+              dl[t]   = 10.0;
+              ds[t]   = true;
+          } else if (mod < 7) {
+              // TRAFFIC burst: congestion data, heavier compute
+              len[t]  = 700.0 + (t % 5) * 100.0;   // 700–1100 MI (heavier)
+              data[t] = len[t] * 1.0;               // moderate data
+              dl[t]   = 100.0;
+              ds[t]   = false;
+          } else {
+              // INFOTAINMENT burst: HD map updates, V2X broadcasts
+              len[t]  = 1500.0 + (t % 7) * 200.0;  // 1500–2700 MI
+              data[t] = len[t] * 1.0;               // moderate data
+              dl[t]   = 1000.0;
+              ds[t]   = false;
+          }
+      }  // ── STEP C: Sort by deadline (EDF priority) ────────────────────────
         Integer[] order = priorityOrder(dl, numTasks);
 
         // ── STEP D: Extract node parameters, build HALVED capacity ─────────
@@ -546,23 +545,38 @@ private void handleRsuHandover() {
  *   Medium load (30-70%): 20 dBm — nominal operating point
  *   High load (> 70%)  : 23 dBm — max reliability mode
  */
+/**
+ * TPC_UPDATE — 5G Transmit Power Control (3GPP TS 38.213 §7.1).
+ * Dynamically adjusts V2X transmission power based on measured RSSI.
+ * As vehicles move over time, distance to RSU increases and signal degrades.
+ * TPC compensates by increasing tx power to maintain reliable communication:
+ *   Strong signal (RSSI > -70 dBm) : 17 dBm — reduce power, save energy
+ *   Medium signal (-70 to -85 dBm) : 20 dBm — nominal operating point
+ *   Weak signal   (RSSI < -85 dBm) : 23 dBm — boost power for reliability
+ *
+ * Signal model: dataset mean RSSI — SAFETY=-70, TRAFFIC=-80, INFO=-90 dBm.
+ * Vehicles start close to RSU (~-65 dBm at t=0) and spread out linearly
+ * to ~-90 dBm at t=100s as the simulation progresses.
+ */
 private void handleTpcUpdate() {
-    int numRsu = 5;
-    int tasksPerRsu = moaoaRsuCount / Math.max(1, numRsu);
+    // Time-varying RSSI: linear degradation as vehicles move away from RSUs
+    // Based on dataset distribution: SAFETY~-70, TRAFFIC~-80, INFO~-90 dBm
+    // Model: RSSI(t) = -65 - (t/100) * 25   → -65 dBm at t=0, -90 dBm at t=100
+    currentRssi = -65.0 - (CloudSim.clock() / 100.0) * 25.0;
+
     double newPower;
     String reason;
-    if (tasksPerRsu < (int)(RSU_CAP * 0.30)) {
-        newPower = 17.0; reason = "low load   → energy-save mode";
-    } else if (tasksPerRsu < (int)(RSU_CAP * 0.70)) {
-        newPower = 20.0; reason = "medium load → nominal power";
+    if (currentRssi > -70.0) {
+        newPower = 17.0; reason = "strong signal → energy-save mode";
+    } else if (currentRssi > -85.0) {
+        newPower = 20.0; reason = "medium signal → nominal power";
     } else {
-        newPower = 23.0; reason = "high load  → max reliability";
+        newPower = 23.0; reason = "weak signal   → max reliability";
     }
     currentTxPower = newPower;
     DebugLogger.log(String.format(
-            "  [TPC_UPDATE  ] t=%5.1fs  RSU tasks/node=%-4d cap=%d" +
-            "  → %.0f dBm  (%s)",
-            CloudSim.clock(), tasksPerRsu, RSU_CAP, newPower, reason));
+            "  [TPC_UPDATE  ] t=%5.1fs  RSSI=%.1f dBm  → %.0f dBm  (%s)",
+            CloudSim.clock(), currentRssi, newPower, reason));
     if (CloudSim.clock() < 90.0)
         send(getId(), 10.0, FogEvents.TPC_UPDATE, null);
 }
@@ -1117,7 +1131,9 @@ private double fitnessOF(int[] sol, int numTasks, int numNodes,
      // ── Task 8: Vehicular Event Summary ──────────────────────────────────
         DebugLogger.section("5G Vehicular Event Summary  [Task 8 — V2X Management]");
         DebugLogger.result("  RSU Handovers",    handoverCount + " vehicles transitioned zones");
-        DebugLogger.result("  TPC Events",       "every 10s  — power adapts to RSU load");
+        DebugLogger.result("  TPC Events",       "every 10s  — power adapts to signal strength (RSSI)");
+        DebugLogger.result("  RSSI Range",       String.format("%.1f dBm (t=10s) → %.1f dBm (t=90s)",
+                -65.0 - (10.0/100.0)*25.0, -65.0 - (90.0/100.0)*25.0));
         DebugLogger.result("  Final Tx Power",   String.format("%.0f dBm", currentTxPower));
         DebugLogger.result("  DPS Scale-Up",     dpsScaleUpCount  + " events (RSU overload → expand)");
         DebugLogger.result("  DPS Scale-Down",   dpsScaleDownCount + " events (RSU idle  → save energy)");
@@ -1167,7 +1183,7 @@ private double fitnessOF(int[] sol, int numTasks, int numNodes,
         DebugLogger.log(String.format("  %-32s  %-16s  %-16s  %-16s", m, c1, c2, c3));
     }
     private void rowI(String lbl, double v2, boolean b2, double v3, boolean b3) {
-        DebugLogger.log(String.format("  %-32s  %-16s  %s%-15.1f%%  %s%-15.1f%%",
+        DebugLogger.log(String.format("  %-32s  %-16s  %s%.1f%%               %s%.1f%%",
                 lbl, "baseline", b2 ? "↓ " : "↑ ", Math.abs(v2), b3 ? "↓ " : "↑ ", Math.abs(v3)));
     }
     private double pct(double base, double val) {
