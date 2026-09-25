@@ -19,8 +19,9 @@ results/
 # Compiled files
 *.class
 
-# Generated media / reports
+# Generated media / reports (except graphs folder)
 *.gif
 *.png
+!graphs/*.png
 *.pdf
 *.xlsx
